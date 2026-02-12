@@ -1,19 +1,113 @@
 import { posts, type Post } from "#velite";
+import { toDateTimestamp } from "@/lib/utils";
+
+interface PublishedPostIndex {
+  publishedPosts: Post[];
+  sortedPosts: Post[];
+  postsBySlug: Map<string, Post>;
+  postsByTag: Map<string, Post[]>;
+  tagCounts: Array<[string, number]>;
+  adjacentPostsBySlug: Map<string, { prevPost?: Post; nextPost?: Post }>;
+}
+
+let cachedPublishedPostIndex: PublishedPostIndex | null = null;
 
 function sortByDateDesc(postItems: Post[]): Post[] {
   return [...postItems].sort((firstPost, secondPost) => {
-    const firstDate = new Date(firstPost.date).getTime();
-    const secondDate = new Date(secondPost.date).getTime();
-    return secondDate - firstDate;
+    const firstDate = toDateTimestamp(firstPost.date);
+    const secondDate = toDateTimestamp(secondPost.date);
+    if (firstDate !== secondDate) {
+      return secondDate - firstDate;
+    }
+
+    return firstPost.slug.localeCompare(secondPost.slug, "ko");
   });
 }
 
+function addPostToTagBucket(
+  postsByTag: Map<string, Post[]>,
+  tag: string,
+  post: Post,
+) {
+  const taggedPosts = postsByTag.get(tag);
+  if (taggedPosts) {
+    taggedPosts.push(post);
+    return;
+  }
+
+  postsByTag.set(tag, [post]);
+}
+
+function buildPostsByTag(sortedPosts: Post[]) {
+  const postsByTag = new Map<string, Post[]>();
+
+  sortedPosts.forEach((post) => {
+    post.tags.forEach((tag) => {
+      addPostToTagBucket(postsByTag, tag, post);
+    });
+  });
+
+  return postsByTag;
+}
+
+function buildTagCounts(postsByTag: Map<string, Post[]>) {
+  return Array.from(postsByTag.entries())
+    .map(([tag, taggedPosts]) => [tag, taggedPosts.length] as [string, number])
+    .sort((firstTag, secondTag) => {
+      if (firstTag[1] !== secondTag[1]) {
+        return secondTag[1] - firstTag[1];
+      }
+
+      return firstTag[0].localeCompare(secondTag[0], "ko");
+    });
+}
+
+function buildAdjacentPostsBySlug(sortedPosts: Post[]) {
+  const adjacentPostsBySlug = new Map<
+    string,
+    { prevPost?: Post; nextPost?: Post }
+  >();
+
+  sortedPosts.forEach((post, index) => {
+    adjacentPostsBySlug.set(post.slug, {
+      prevPost: sortedPosts[index + 1],
+      nextPost: sortedPosts[index - 1],
+    });
+  });
+
+  return adjacentPostsBySlug;
+}
+
+function createPublishedPostIndex(): PublishedPostIndex {
+  const publishedPosts = posts.filter((post) => post.published);
+  const sortedPosts = sortByDateDesc(publishedPosts);
+  const postsBySlug = new Map(publishedPosts.map((post) => [post.slug, post]));
+  const postsByTag = buildPostsByTag(sortedPosts);
+
+  return {
+    publishedPosts,
+    sortedPosts,
+    postsBySlug,
+    postsByTag,
+    tagCounts: buildTagCounts(postsByTag),
+    adjacentPostsBySlug: buildAdjacentPostsBySlug(sortedPosts),
+  };
+}
+
+function getPublishedPostIndex() {
+  if (!cachedPublishedPostIndex) {
+    cachedPublishedPostIndex = createPublishedPostIndex();
+  }
+
+  return cachedPublishedPostIndex;
+}
+
 export function getPublishedPosts(): Post[] {
-  return posts.filter((post) => post.published);
+  return getPublishedPostIndex().publishedPosts;
 }
 
 export function getSortedPublishedPosts(): Post[] {
-  return sortByDateDesc(getPublishedPosts());
+  return getPublishedPostIndex().sortedPosts;
 }
 
 export function getRecentPublishedPosts(limit: number): Post[] {
@@ -21,51 +115,24 @@ export function getRecentPublishedPosts(limit: number): Post[] {
 }
 
 export function getPublishedPostBySlug(slug: string): Post | undefined {
-  return getPublishedPosts().find((post) => post.slug === slug);
+  return getPublishedPostIndex().postsBySlug.get(slug);
 }
 
 export function getAdjacentPublishedPosts(slug: string): {
   prevPost?: Post;
   nextPost?: Post;
 } {
-  const sortedPosts = getSortedPublishedPosts();
-  const currentIndex = sortedPosts.findIndex((post) => post.slug === slug);
-  if (currentIndex < 0) {
-    return {};
-  }
-
-  return {
-    prevPost: sortedPosts[currentIndex + 1],
-    nextPost: sortedPosts[currentIndex - 1],
-  };
+  return getPublishedPostIndex().adjacentPostsBySlug.get(slug) ?? {};
 }
 
 export function getPublishedPostsByTag(tag: string): Post[] {
-  return getSortedPublishedPosts().filter((post) => post.tags.includes(tag));
+  return getPublishedPostIndex().postsByTag.get(tag) ?? [];
 }
 
 export function getPublishedTags(): string[] {
-  const tagSet = new Set<string>();
-
-  getPublishedPosts().forEach((post) => {
-    post.tags.forEach((tag) => {
-      tagSet.add(tag);
-    });
-  });
-
-  return Array.from(tagSet);
+  return getPublishedPostIndex().tagCounts.map(([tag]) => tag);
 }
 
 export function getPublishedTagCounts(): Array<[string, number]> {
-  const tagCounts: Record<string, number> = {};
-
-  getPublishedPosts().forEach((post) => {
-    post.tags.forEach((tag) => {
-      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-    });
-  });
-
-  return Object.entries(tagCounts).sort((firstTag, secondTag) => {
-    return secondTag[1] - firstTag[1];
-  });
+  return getPublishedPostIndex().tagCounts;
 }

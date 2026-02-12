@@ -1,6 +1,7 @@
 import { Feed } from "feed";
 import { siteConfig } from "@/lib/site-config";
 import { getSortedPublishedPosts } from "@/lib/posts";
+import { toDate } from "@/lib/utils";
 
 export async function GET() {
   const feed = new Feed({
@@ -24,7 +25,7 @@ export async function GET() {
       id: `${siteConfig.url}${post.permalink}`,
       link: `${siteConfig.url}${post.permalink}`,
       description: post.description,
-      date: new Date(post.date),
+      date: toDate(post.date),
       author: [{ name: siteConfig.author.name }],
     });
   }
