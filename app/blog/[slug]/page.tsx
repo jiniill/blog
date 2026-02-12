@@ -76,15 +76,18 @@ export default async function PostPage({ params }: PostPageProps) {
     <Container className="py-16">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
       />
       <article>
         <PostHeader post={post} />
-        <div className="mt-10">
-          <PostBody code={post.body} />
-        </div>
+        <CodeBlockCopy>
+          <div className="mt-10">
+            <PostBody code={post.body} />
+          </div>
+        </CodeBlockCopy>
       </article>
-      <CodeBlockCopy />
       <PostNav prev={prevPost} next={nextPost} />
       <Comments />
     </Container>

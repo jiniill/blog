@@ -10,7 +10,7 @@ export default defineConfig({
     data: ".velite",
     assets: "public/static",
     base: "/static/",
-    name: "[name]-[hash:6].[ext]",
+    name: "[name].[ext]",
     clean: true,
   },
   collections: {

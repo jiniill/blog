@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    resolveAlias: {
+      "#velite": "./.velite",
+    },
+  },
+  webpack: (config) => {
+    config.resolve.alias["#velite"] = `${process.cwd()}/.velite`;
+    return config;
+  },
 };
 
 export default nextConfig;

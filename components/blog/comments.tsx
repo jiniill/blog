@@ -1,11 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Giscus from "@giscus/react";
 import { useTheme } from "next-themes";
 import { siteConfig } from "@/lib/site-config";
 
 export function Comments() {
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
 
   return (
     <div className="mt-16 border-t border-zinc-200 pt-10 dark:border-zinc-800">
