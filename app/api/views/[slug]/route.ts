@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getSupabaseClient } from "@/lib/supabase";
 
+export const runtime = "edge";
+
 const VALID_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_SLUG_LENGTH = 200;
 
