@@ -8,9 +8,9 @@ export const siteConfig = {
     twitter: "https://twitter.com",
   },
   giscus: {
-    repo: "owner/repo" as `${string}/${string}`,
-    repoId: "",
-    category: "Announcements",
-    categoryId: "",
+    repo: "jiniill/blog" as `${string}/${string}`,
+    repoId: "R_kgDOROUtqw",
+    category: "General",
+    categoryId: "DIC_kwDOROUtq84C2QfE",
   },
 } as const;
