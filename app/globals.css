@@ -524,3 +524,78 @@ body {
   box-shadow: var(--theme-shadow-hover);
   transform: translateY(-4px);
 }
+
+/* ================================================================
+   Search dialog — <dialog> + data-state 기반 애니메이션
+   ================================================================ */
+@keyframes search-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes search-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes search-slide-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes search-slide-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+
+/* dialog 기본 스타일 리셋 */
+.search-dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) {
+  .search-dialog { padding-top: 20vh; }
+}
+
+/* backdrop */
+.search-dialog::backdrop {
+  background: var(--theme-bg, #000);
+  opacity: 0.8;
+}
+
+/* 열기 애니메이션 */
+.search-dialog[data-state="opening"] {
+  animation: search-fade-in 150ms ease-out both;
+}
+.search-dialog[data-state="opening"]::backdrop {
+  animation: search-fade-in 150ms ease-out both;
+}
+.search-dialog[data-state="opening"] .search-panel {
+  animation: search-slide-in 150ms ease-out both;
+}
+
+/* 닫기 애니메이션 */
+.search-dialog[data-state="closing"] {
+  animation: search-fade-out 150ms ease-in both;
+}
+.search-dialog[data-state="closing"]::backdrop {
+  animation: search-fade-out 150ms ease-in both;
+}
+.search-dialog[data-state="closing"] .search-panel {
+  animation: search-slide-out 150ms ease-in both;
+}
+
+/* 접근성: 모션 감도 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  .search-dialog,
+  .search-dialog::backdrop,
+  .search-dialog .search-panel {
+    animation-duration: 1ms !important;
+  }
+}
