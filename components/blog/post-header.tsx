@@ -2,6 +2,7 @@ import type { Post } from "#velite";
 import { formatDate } from "@/lib/utils";
 import { getReadingTimeLabelByWordCount } from "@/lib/reading-time";
 import { TagBadge } from "./tag-badge";
+import { ViewCounter } from "./view-counter";
 
 export function PostHeader({ post }: { post: Post }) {
   const readingTimeLabel = getReadingTimeLabelByWordCount(post.metadata.wordCount);
@@ -14,6 +15,7 @@ export function PostHeader({ post }: { post: Post }) {
       <div className="flex items-center gap-3 text-sm text-subtle">
         <time dateTime={post.date}>{formatDate(post.date)}</time>
         {readingTimeLabel && <span>{readingTimeLabel}</span>}
+        <ViewCounter slug={post.slug} />
       </div>
       {post.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

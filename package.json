@@ -15,6 +15,7 @@
     "@giscus/react": "^3.1.0",
     "@keystatic/core": "^0.5.48",
     "@keystatic/next": "^5.0.4",
+    "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/typography": "^0.5.19",
     "clsx": "^2.1.1",
     "feed": "^5.2.0",
