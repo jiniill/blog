@@ -24,7 +24,9 @@ export function CodeBlockCopy({ children }: { children: React.ReactNode }) {
       btn.setAttribute("data-copy-btn", "true");
       btn.setAttribute("aria-label", "코드 복사");
       btn.className =
-        "absolute right-2 top-2 rounded-md bg-zinc-700/50 p-1.5 text-zinc-300 opacity-0 transition-opacity hover:bg-zinc-700";
+        "absolute right-2 top-2 rounded-md p-1.5 opacity-0 transition-opacity";
+      btn.style.backgroundColor = "var(--theme-code-copy-bg)";
+      btn.style.color = "var(--theme-code-copy-fg)";
       btn.innerHTML = COPY_ICON;
 
       const showBtn = () => (btn.style.opacity = "1");

@@ -32,16 +32,16 @@ export default function TagsPage() {
             <Link
               key={tag}
               href={`/tags/${tag}`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-[var(--theme-radius-sm)] border-[length:var(--theme-border-width)] border-border bg-muted px-3 py-1.5 text-sm text-body hover:bg-muted-hover shadow-[var(--theme-shadow)] transition-colors"
             >
               {tag}
-              <span className="text-xs text-zinc-500 dark:text-zinc-500">
+              <span className="text-xs text-subtle">
                 {count}
               </span>
             </Link>
           ))
         ) : (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-subtle">
             태그가 없습니다.
           </p>
         )}

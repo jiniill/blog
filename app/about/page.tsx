@@ -10,7 +10,7 @@ export default function AboutPage() {
   return (
     <Container className="py-16">
       <h1 className="text-3xl font-bold tracking-tight">About</h1>
-      <div className="prose prose-zinc mt-8 dark:prose-invert">
+      <div className="prose mt-8">
         <p>
           이 블로그는 개발과 기술에 대한 이야기를 기록하는 공간입니다.
         </p>

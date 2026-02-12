@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <Container className="flex flex-col items-center justify-center py-32 text-center">
       <h1 className="text-6xl font-bold">404</h1>
-      <p className="mt-4 text-lg text-zinc-500 dark:text-zinc-400">
+      <p className="mt-4 text-lg text-subtle">
         페이지를 찾을 수 없습니다.
       </p>
       <Link

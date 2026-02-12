@@ -11,13 +11,13 @@ export function PostNav({ prev, next }: PostNavProps) {
   if (!prev && !next) return null;
 
   return (
-    <nav className="mt-16 flex items-stretch gap-4 border-t border-zinc-200 pt-8 dark:border-zinc-800">
+    <nav className="mt-16 flex items-stretch gap-4 border-t border-border pt-8">
       {prev ? (
         <Link
           href={prev.permalink}
-          className="group flex flex-1 flex-col items-start gap-1 rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900 transition-colors"
+          className="group flex flex-1 flex-col items-start gap-1 rounded-[var(--theme-radius-lg)] border-[length:var(--theme-border-width)] border-border p-4 hover:bg-surface-hover shadow-[var(--theme-shadow)] hover:shadow-[var(--theme-shadow-hover)] transition-all"
         >
-          <span className="flex items-center gap-1 text-xs text-zinc-500">
+          <span className="flex items-center gap-1 text-xs text-subtle">
             <ChevronLeft className="h-3 w-3" />
             이전 글
           </span>
@@ -31,9 +31,9 @@ export function PostNav({ prev, next }: PostNavProps) {
       {next ? (
         <Link
           href={next.permalink}
-          className="group flex flex-1 flex-col items-end gap-1 rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900 transition-colors"
+          className="group flex flex-1 flex-col items-end gap-1 rounded-[var(--theme-radius-lg)] border-[length:var(--theme-border-width)] border-border p-4 hover:bg-surface-hover shadow-[var(--theme-shadow)] hover:shadow-[var(--theme-shadow-hover)] transition-all"
         >
-          <span className="flex items-center gap-1 text-xs text-zinc-500">
+          <span className="flex items-center gap-1 text-xs text-subtle">
             다음 글
             <ChevronRight className="h-3 w-3" />
           </span>

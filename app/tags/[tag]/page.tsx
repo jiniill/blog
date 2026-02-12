@@ -36,7 +36,7 @@ export default async function TagPage({ params }: TagPageProps) {
   return (
     <Container className="py-16">
       <h1 className="text-3xl font-bold tracking-tight">#{decoded}</h1>
-      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="mt-2 text-sm text-subtle">
         {filtered.length}개의 글
       </p>
       <div className="mt-10 space-y-10">

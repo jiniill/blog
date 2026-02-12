@@ -15,7 +15,7 @@ export function PostBody({ code }: { code: string }) {
   }, [code]);
 
   return (
-    <div className="prose prose-zinc max-w-none dark:prose-invert prose-headings:scroll-mt-20 prose-pre:bg-zinc-950 dark:prose-pre:bg-zinc-900">
+    <div className="prose max-w-none prose-headings:scroll-mt-20">
       {content}
     </div>
   );

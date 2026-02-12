@@ -5,15 +5,13 @@ import { TagBadge } from "./tag-badge";
 
 export function PostCard({ post }: { post: Post }) {
   return (
-    <article className="group">
+    <article className="post-card group">
       <Link href={post.permalink} className="block space-y-3">
         <h3 className="text-xl font-semibold tracking-tight group-hover:underline">
           {post.title}
         </h3>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2">
-          {post.description}
-        </p>
-        <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-500">
+        <p className="text-sm text-body line-clamp-2">{post.description}</p>
+        <div className="flex items-center gap-3 text-xs text-subtle">
           <time dateTime={post.date}>{formatDate(post.date)}</time>
           {post.metadata.readingTime > 0 && (
             <span>{Math.ceil(post.metadata.readingTime)}분 읽기</span>

@@ -16,11 +16,11 @@ export default function Home() {
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
           안녕하세요,
           <br />
-          <span className="text-zinc-500 dark:text-zinc-400">
+          <span className="text-subtle">
             블로그에 오신 걸 환영합니다.
           </span>
         </h1>
-        <p className="max-w-lg text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="max-w-lg text-lg text-body">
           개발, 기술, 그리고 다양한 생각을 기록하는 공간입니다.
         </p>
         <Link
@@ -41,7 +41,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-subtle">
             아직 작성된 글이 없습니다.
           </p>
         )}

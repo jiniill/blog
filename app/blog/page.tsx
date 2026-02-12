@@ -20,7 +20,7 @@ export default function BlogPage() {
         {sortedPosts.length > 0 ? (
           sortedPosts.map((post) => <PostCard key={post.slug} post={post} />)
         ) : (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-subtle">
             아직 작성된 글이 없습니다.
           </p>
         )}

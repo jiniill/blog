@@ -15,7 +15,7 @@ export function Comments() {
   if (!mounted) return null;
 
   return (
-    <div className="mt-16 border-t border-zinc-200 pt-10 dark:border-zinc-800">
+    <div className="mt-16 border-t border-border pt-10">
       <Giscus
         repo={siteConfig.giscus.repo}
         repoId={siteConfig.giscus.repoId}
