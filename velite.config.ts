@@ -3,6 +3,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import remarkGfm from "remark-gfm";
+import { rehypeFixEmphasis } from "./lib/rehype-fix-emphasis";
 
 export default defineConfig({
   root: "content",
@@ -40,6 +41,7 @@ export default defineConfig({
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
+      rehypeFixEmphasis,
       rehypeSlug,
       [rehypePrettyCode, { theme: { dark: "github-dark", light: "github-light" } }],
       [rehypeAutolinkHeadings, { behavior: "wrap" }],
