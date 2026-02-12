@@ -9,6 +9,7 @@ export function Comments() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration 안전을 위한 표준 패턴
   useEffect(() => setMounted(true), []);
 
   if (!mounted) return null;
