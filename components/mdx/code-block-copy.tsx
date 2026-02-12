@@ -21,10 +21,11 @@ export function CodeBlockCopy({ children }: { children: React.ReactNode }) {
       pre.style.position = "relative";
 
       const btn = document.createElement("button");
+      btn.type = "button";
       btn.setAttribute("data-copy-btn", "true");
       btn.setAttribute("aria-label", "코드 복사");
       btn.className =
-        "absolute right-2 top-2 rounded-md p-1.5 opacity-0 transition-opacity";
+        "absolute right-2 top-2 rounded-md p-1.5 opacity-0 transition-opacity focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
       btn.style.backgroundColor = "var(--theme-code-copy-bg)";
       btn.style.color = "var(--theme-code-copy-fg)";
       btn.innerHTML = COPY_ICON;
@@ -34,7 +35,7 @@ export function CodeBlockCopy({ children }: { children: React.ReactNode }) {
       pre.addEventListener("mouseenter", showBtn);
       pre.addEventListener("mouseleave", hideBtn);
 
-      let timeout: ReturnType<typeof setTimeout>;
+      let timeout: ReturnType<typeof setTimeout> | undefined;
       btn.addEventListener("click", async () => {
         const code = pre.textContent || "";
         await navigator.clipboard.writeText(code);
@@ -53,7 +54,7 @@ export function CodeBlockCopy({ children }: { children: React.ReactNode }) {
     });
 
     return () => cleanups.forEach((fn) => fn());
-  });
+  }, [children]);
 
   return <div ref={ref}>{children}</div>;
 }

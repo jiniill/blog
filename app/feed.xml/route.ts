@@ -1,6 +1,6 @@
 import { Feed } from "feed";
-import { posts } from "#velite";
 import { siteConfig } from "@/lib/site-config";
+import { getSortedPublishedPosts } from "@/lib/posts";
 
 export async function GET() {
   const feed = new Feed({
@@ -16,9 +16,7 @@ export async function GET() {
     },
   });
 
-  const sortedPosts = posts
-    .filter((p) => p.published)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedPosts = getSortedPublishedPosts();
 
   for (const post of sortedPosts) {
     feed.addItem({

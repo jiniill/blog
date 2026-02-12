@@ -1,14 +1,11 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { posts } from "#velite";
 import { Container } from "@/components/layout/container";
 import { PostCard } from "@/components/blog/post-card";
+import { getRecentPublishedPosts } from "@/lib/posts";
 
 export default function Home() {
-  const recentPosts = posts
-    .filter((p) => p.published)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+  const recentPosts = getRecentPublishedPosts(5);
 
   return (
     <Container className="py-20">

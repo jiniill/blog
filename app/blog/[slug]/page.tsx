@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { posts } from "#velite";
 import { siteConfig } from "@/lib/site-config";
+import {
+  getAdjacentPublishedPosts,
+  getPublishedPostBySlug,
+  getPublishedPosts,
+} from "@/lib/posts";
 import { Container } from "@/components/layout/container";
 import { PostHeader } from "@/components/blog/post-header";
 import { PostBody } from "@/components/blog/post-body";
@@ -13,21 +17,15 @@ interface PostPageProps {
   params: Promise<{ slug: string }>;
 }
 
-function getPostBySlug(slug: string) {
-  return posts.find((p) => p.slug === slug && p.published);
-}
-
 export async function generateStaticParams() {
-  return posts
-    .filter((p) => p.published)
-    .map((post) => ({ slug: post.slug }));
+  return getPublishedPosts().map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = getPublishedPostBySlug(slug);
   if (!post) return {};
 
   return {
@@ -47,15 +45,10 @@ export async function generateMetadata({
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = getPublishedPostBySlug(slug);
   if (!post) notFound();
 
-  const sortedPosts = posts
-    .filter((p) => p.published)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const currentIndex = sortedPosts.findIndex((p) => p.slug === slug);
-  const prevPost = sortedPosts[currentIndex + 1];
-  const nextPost = sortedPosts[currentIndex - 1];
+  const { prevPost, nextPost } = getAdjacentPublishedPosts(slug);
 
   const jsonLd = {
     "@context": "https://schema.org",

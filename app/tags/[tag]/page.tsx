@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
-import { posts } from "#velite";
 import { Container } from "@/components/layout/container";
 import { PostCard } from "@/components/blog/post-card";
+import { getPublishedPostsByTag, getPublishedTags } from "@/lib/posts";
 
 interface TagPageProps {
   params: Promise<{ tag: string }>;
 }
 
 export async function generateStaticParams() {
-  const tags = new Set<string>();
-  posts
-    .filter((p) => p.published)
-    .forEach((post) => post.tags.forEach((tag) => tags.add(tag)));
-  return Array.from(tags).map((tag) => ({ tag }));
+  return getPublishedTags().map((tag) => ({ tag: encodeURIComponent(tag) }));
 }
 
 export async function generateMetadata({
@@ -29,9 +25,7 @@ export async function generateMetadata({
 export default async function TagPage({ params }: TagPageProps) {
   const { tag } = await params;
   const decoded = decodeURIComponent(tag);
-  const filtered = posts
-    .filter((p) => p.published && p.tags.includes(decoded))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const filtered = getPublishedPostsByTag(decoded);
 
   return (
     <Container className="py-16">

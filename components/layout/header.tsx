@@ -15,6 +15,7 @@ const navLinks = [
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileMenuId = "mobile-navigation";
 
   return (
     <header className="sticky top-0 z-50 border-b-[length:var(--theme-border-width)] border-header-border bg-header-bg backdrop-blur-[var(--theme-glass-blur)]">
@@ -45,7 +46,9 @@ export function Header() {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--theme-radius-md)] hover:bg-surface-hover"
-            aria-label="메뉴 열기"
+            aria-expanded={mobileOpen}
+            aria-controls={mobileMenuId}
+            aria-label={mobileOpen ? "메뉴 닫기" : "메뉴 열기"}
           >
             {mobileOpen ? (
               <X className="h-4 w-4" />
@@ -58,7 +61,7 @@ export function Header() {
 
       {/* Mobile nav */}
       {mobileOpen && (
-        <nav className="border-t border-border sm:hidden">
+        <nav id={mobileMenuId} className="border-t border-border sm:hidden">
           <Container className="flex flex-col gap-2 py-4">
             {navLinks.map((link) => (
               <Link

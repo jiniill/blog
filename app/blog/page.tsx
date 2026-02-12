@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { posts } from "#velite";
 import { Container } from "@/components/layout/container";
 import { PostCard } from "@/components/blog/post-card";
+import { getSortedPublishedPosts } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -9,9 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
-  const sortedPosts = posts
-    .filter((p) => p.published)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedPosts = getSortedPublishedPosts();
 
   return (
     <Container className="py-16">
