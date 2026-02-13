@@ -90,20 +90,18 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
 
   /* isOpen 변경에 따라 phase 상태 머신 액션을 디스패치합니다. */
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
     if (isOpen) {
-      if (!dialog.open) dialog.showModal();
       dispatchPhase({ type: "OPEN_REQUESTED" });
     } else {
       dispatchPhase({ type: "CLOSE_REQUESTED" });
     }
   }, [isOpen]);
 
-  /* opening 페이즈에 진입하면 입력창에 포커스를 맞춥니다. */
+  /* opening 페이즈에 진입하면 dialog를 열고 입력창에 포커스를 맞춥니다. */
   useEffect(() => {
     if (phase === "opening") {
+      const dialog = dialogRef.current;
+      if (dialog && !dialog.open) dialog.showModal();
       inputRef.current?.focus();
     }
   }, [phase]);
