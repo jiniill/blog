@@ -12,6 +12,7 @@ import { PostBody } from "@/components/blog/post-body";
 import { Comments } from "@/components/blog/comments";
 import { PostNav } from "@/components/blog/post-nav";
 import { CodeBlockCopy } from "@/components/mdx/code-block-copy";
+import { SubscribeCta } from "@/components/subscribe/subscribe-cta";
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -81,6 +82,7 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
         </CodeBlockCopy>
       </article>
+      <SubscribeCta />
       <PostNav prev={prevPost} next={nextPost} />
       <Comments />
     </Container>

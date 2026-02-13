@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { SearchTrigger } from "@/components/search/search-trigger";
+import { SubscribeModal } from "@/components/subscribe/subscribe-modal";
 import { ThemeSelector } from "@/components/ui/theme-selector";
 import { Container } from "./container";
 
@@ -16,6 +17,7 @@ const navLinks = [
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [subscribeOpen, setSubscribeOpen] = useState(false);
   const pathname = usePathname();
   const mobileMenuId = "mobile-navigation";
   const navRef = useRef<HTMLElement>(null);
@@ -93,12 +95,17 @@ export function Header() {
             <SearchTrigger />
             <ThemeSelector />
           </div>
-          <a
-            href="#"
+          <button
+            type="button"
+            onClick={() => setSubscribeOpen(true)}
             className="hidden rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg shadow-lg transition-all hover:opacity-90 sm:inline-flex"
           >
             Subscribe
-          </a>
+          </button>
+          <SubscribeModal
+            isOpen={subscribeOpen}
+            onClose={() => setSubscribeOpen(false)}
+          />
 
           {/* 모바일: 햄버거 */}
           <button
@@ -139,6 +146,16 @@ export function Header() {
             <div className="mt-2 flex items-center gap-2 border-t border-border pt-3">
               <SearchTrigger />
               <ThemeSelector />
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  setSubscribeOpen(true);
+                }}
+                className="ml-auto rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-fg transition-opacity hover:opacity-90"
+              >
+                Subscribe
+              </button>
             </div>
           </Container>
         </nav>

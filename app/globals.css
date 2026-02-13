@@ -634,3 +634,83 @@ body {
     animation-duration: 1ms !important;
   }
 }
+
+/* ================================================================
+   Subscribe dialog — <dialog> + data-state 기반 애니메이션
+   ================================================================ */
+@keyframes subscribe-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes subscribe-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes subscribe-slide-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes subscribe-slide-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+@keyframes subscribe-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 0.8; }
+}
+@keyframes subscribe-backdrop-out {
+  from { opacity: 0.8; }
+  to { opacity: 0; }
+}
+
+.subscribe-dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  margin: 0;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+}
+
+.subscribe-dialog[open] {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  padding-inline: 1rem;
+  animation: subscribe-fade-in 150ms ease-out both;
+}
+@media (min-width: 640px) {
+  .subscribe-dialog[open] { padding-top: 20vh; }
+}
+
+.subscribe-dialog[open]::backdrop {
+  background: var(--theme-bg, #000);
+  animation: subscribe-backdrop-in 150ms ease-out both;
+}
+
+.subscribe-dialog[open] .subscribe-panel {
+  animation: subscribe-slide-in 150ms ease-out both;
+}
+
+.subscribe-dialog[data-state="closing"] {
+  animation: subscribe-fade-out 150ms ease-in both;
+}
+.subscribe-dialog[data-state="closing"]::backdrop {
+  animation: subscribe-backdrop-out 150ms ease-in both;
+}
+.subscribe-dialog[data-state="closing"] .subscribe-panel {
+  animation: subscribe-slide-out 150ms ease-in both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subscribe-dialog,
+  .subscribe-dialog::backdrop,
+  .subscribe-dialog .subscribe-panel {
+    animation-duration: 1ms !important;
+  }
+}
