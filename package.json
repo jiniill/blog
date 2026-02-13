@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "velite --watch & next dev --turbopack -H 0.0.0.0",
+    "dev": "velite --watch & next dev --webpack -H 0.0.0.0",
+    "dev:turbo": "velite --watch & next dev --turbopack -H 0.0.0.0",
     "build": "velite && next build",
     "start": "next start",
     "lint": "eslint",
