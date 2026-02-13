@@ -1,0 +1,23 @@
+{
+  "New Blog Post": {
+    "scope": "mdx,markdown",
+    "prefix": "post",
+    "description": "블로그 포스트 프론트매터 생성",
+    "body": [
+      "---",
+      "title: \"${1:제목}\"",
+      "slug: ${2:slug}",
+      "description: \"${3:설명}\"",
+      "date: ${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}",
+      "published: ${4|true,false|}",
+      "tags:",
+      "  - \"${5:태그}\"",
+      "author: \"${6:저자}\"",
+      "sourceTitle: \"${7:원문 제목}\"",
+      "sourceUrl: \"${8:https://}\"",
+      "---",
+      "",
+      "$0"
+    ]
+  }
+}

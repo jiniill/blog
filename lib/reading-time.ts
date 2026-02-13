@@ -1,31 +1,28 @@
-const AVERAGE_WORD_COUNT_PER_MINUTE = 265;
+const CJK_CHARS_PER_MINUTE = 500;
+const ENGLISH_WORDS_PER_MINUTE = 265;
 
-const READING_TIME_BUCKETS = [
-  {
-    maxWordCount: AVERAGE_WORD_COUNT_PER_MINUTE - 1,
-    label: "짧게 읽기",
-  },
-  {
-    maxWordCount: AVERAGE_WORD_COUNT_PER_MINUTE * 3 - 1,
-    label: "가볍게 읽기",
-  },
-  {
-    maxWordCount: AVERAGE_WORD_COUNT_PER_MINUTE * 6 - 1,
-    label: "천천히 읽기",
-  },
+const READING_TIME_LABELS = [
+  { maxMinutes: 1, label: "짧게 읽기" },
+  { maxMinutes: 3, label: "가볍게 읽기" },
+  { maxMinutes: 6, label: "천천히 읽기" },
 ] as const;
 
-export function getReadingTimeLabelByWordCount(wordCount: number) {
-  if (wordCount <= 0) {
+export function getReadingTimeMinutes(charCount: number, wordCount: number) {
+  const cjkMinutes = charCount / CJK_CHARS_PER_MINUTE;
+  const englishMinutes = wordCount / ENGLISH_WORDS_PER_MINUTE;
+  return Math.max(1, Math.ceil(cjkMinutes + englishMinutes));
+}
+
+export function getReadingTimeLabel(charCount: number, wordCount: number) {
+  if (charCount <= 0 && wordCount <= 0) {
     return null;
   }
 
-  const matchedBucket = READING_TIME_BUCKETS.find((bucket) => {
-    return wordCount <= bucket.maxWordCount;
-  });
-  if (matchedBucket) {
-    return matchedBucket.label;
-  }
+  const minutes = getReadingTimeMinutes(charCount, wordCount);
 
-  return "깊이 읽기";
+  const matched = READING_TIME_LABELS.find(
+    (bucket) => minutes <= bucket.maxMinutes,
+  );
+
+  return matched?.label ?? "깊이 읽기";
 }

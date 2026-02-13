@@ -4,6 +4,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import remarkGfm from "remark-gfm";
 import { rehypeFixEmphasis } from "./lib/rehype-fix-emphasis";
+import { countContentChars } from "./lib/content-char-count";
 
 export default defineConfig({
   root: "content",
@@ -17,7 +18,7 @@ export default defineConfig({
   collections: {
     posts: {
       name: "Post",
-      pattern: "posts/**/index.mdx",
+      pattern: "posts/**/*.mdx",
       schema: s
         .object({
           title: s.string().max(120),
@@ -27,9 +28,14 @@ export default defineConfig({
           updated: s.isodate().optional(),
           published: s.boolean().default(true),
           tags: s.array(s.string()).default([]),
+          author: s.string().optional(),
+          sourceUrl: s.string().url().optional(),
+          sourceTitle: s.string().optional(),
           image: s.image().optional(),
           body: s.mdx(),
-          metadata: s.metadata(),
+          metadata: s
+            .custom()
+            .transform((_, { meta }) => countContentChars(meta.plain ?? "")),
           toc: s.toc(),
         })
         .transform((data) => ({

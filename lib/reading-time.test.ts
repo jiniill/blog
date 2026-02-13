@@ -1,26 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { getReadingTimeLabelByWordCount } from "@/lib/reading-time";
+import { getReadingTimeLabel, getReadingTimeMinutes } from "@/lib/reading-time";
 
-describe("lib/reading-time 구간 라벨", () => {
-  it("0 이하 단어 수는 라벨을 반환하지 않는다", () => {
-    expect(getReadingTimeLabelByWordCount(0)).toBeNull();
+describe("getReadingTimeMinutes", () => {
+  it("한국어만 있는 경우 글자 수 기준으로 계산한다", () => {
+    expect(getReadingTimeMinutes(500, 0)).toBe(1);
+    expect(getReadingTimeMinutes(1500, 0)).toBe(3);
   });
 
-  it("1분 이하 구간을 반환한다", () => {
-    expect(getReadingTimeLabelByWordCount(264)).toBe("짧게 읽기");
+  it("영어만 있는 경우 단어 수 기준으로 계산한다", () => {
+    expect(getReadingTimeMinutes(0, 265)).toBe(1);
+    expect(getReadingTimeMinutes(0, 795)).toBe(3);
   });
 
-  it("2-3분 구간을 반환한다", () => {
-    expect(getReadingTimeLabelByWordCount(265)).toBe("가볍게 읽기");
-    expect(getReadingTimeLabelByWordCount(794)).toBe("가볍게 읽기");
+  it("한국어+영어 혼합 시 합산한다", () => {
+    // 250/500 + 133/265 ≈ 1.002 → ceil = 2
+    expect(getReadingTimeMinutes(250, 133)).toBe(2);
   });
 
-  it("4-6분 구간을 반환한다", () => {
-    expect(getReadingTimeLabelByWordCount(795)).toBe("천천히 읽기");
-    expect(getReadingTimeLabelByWordCount(1589)).toBe("천천히 읽기");
+  it("최소 1분을 반환한다", () => {
+    expect(getReadingTimeMinutes(1, 0)).toBe(1);
+  });
+});
+
+describe("getReadingTimeLabel", () => {
+  it("내용이 없으면 라벨을 반환하지 않는다", () => {
+    expect(getReadingTimeLabel(0, 0)).toBeNull();
   });
 
-  it("최대 구간 초과 시 7분 이상 라벨을 반환한다", () => {
-    expect(getReadingTimeLabelByWordCount(1590)).toBe("깊이 읽기");
+  it("1분 이하: 짧게 읽기", () => {
+    expect(getReadingTimeLabel(400, 0)).toBe("짧게 읽기");
+  });
+
+  it("2-3분: 가볍게 읽기", () => {
+    expect(getReadingTimeLabel(1000, 0)).toBe("가볍게 읽기");
+    expect(getReadingTimeLabel(1500, 0)).toBe("가볍게 읽기");
+  });
+
+  it("4-6분: 천천히 읽기", () => {
+    expect(getReadingTimeLabel(2000, 0)).toBe("천천히 읽기");
+    expect(getReadingTimeLabel(3000, 0)).toBe("천천히 읽기");
+  });
+
+  it("7분 이상: 깊이 읽기", () => {
+    expect(getReadingTimeLabel(4000, 0)).toBe("깊이 읽기");
   });
 });

@@ -526,6 +526,30 @@ body {
 }
 
 /* ================================================================
+   Skeleton shimmer
+   ================================================================ */
+@keyframes skeleton-shimmer {
+  0% { background-position-x: 200%; }
+  100% { background-position-x: 0%; }
+}
+
+.skeleton-glow {
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, currentColor 8%, transparent),
+    color-mix(in srgb, currentColor 8%, transparent) 40%,
+    color-mix(in srgb, currentColor 20%, transparent) 50%,
+    color-mix(in srgb, currentColor 8%, transparent) 60%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-glow { animation: none; }
+}
+
+/* ================================================================
    Search dialog — <dialog> + data-state 기반 애니메이션
    ================================================================ */
 @keyframes search-fade-in {

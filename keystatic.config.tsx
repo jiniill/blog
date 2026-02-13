@@ -19,7 +19,7 @@ export default config({
     posts: collection({
       label: "Blog Posts",
       slugField: "title",
-      path: "content/posts/*/index",
+      path: "content/posts/**/index",
       format: { contentField: "content" },
       entryLayout: "content",
       schema: {
@@ -43,6 +43,9 @@ export default config({
           label: "태그",
           itemLabel: (props) => props.value,
         }),
+        author: fields.text({ label: "저자" }),
+        sourceUrl: fields.url({ label: "원문 링크" }),
+        sourceTitle: fields.text({ label: "원문 제목" }),
         image: fields.image({
           label: "대표 이미지",
           directory: "content/posts",
