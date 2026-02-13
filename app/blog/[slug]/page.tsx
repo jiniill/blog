@@ -13,6 +13,7 @@ import { Comments } from "@/components/blog/comments";
 import { PostNav } from "@/components/blog/post-nav";
 import { CodeBlockCopy } from "@/components/mdx/code-block-copy";
 import { SubscribeCta } from "@/components/subscribe/subscribe-cta";
+import { TableOfContents } from "@/components/blog/table-of-contents";
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -74,8 +75,9 @@ export default async function PostPage({ params }: PostPageProps) {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <article>
+      <article className="relative">
         <PostHeader post={post} />
+        {post.toc.length > 0 && <TableOfContents items={post.toc} />}
         <CodeBlockCopy>
           <div className="mt-10">
             <PostBody code={post.body} />
