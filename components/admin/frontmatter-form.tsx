@@ -9,8 +9,32 @@ import type {
 const DESCRIPTION_MAX_LENGTH = 300;
 const FIELD_CLASS_NAME =
   "w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-body outline-none transition focus:ring-2 focus:ring-accent";
-const CHECKBOX_CLASS_NAME =
-  "h-4 w-4 rounded border border-border bg-surface text-accent focus:ring-2 focus:ring-accent";
+function ToggleSwitch({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className="group relative inline-flex h-[26px] w-[46px] shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      style={{ backgroundColor: checked ? "var(--color-accent)" : "var(--color-border)" }}
+    >
+      <span
+        className="pointer-events-none block size-[22px] rounded-full bg-white shadow-sm ring-0 transition-transform duration-200"
+        style={{ transform: checked ? "translateX(22px)" : "translateX(2px)" }}
+      />
+    </button>
+  );
+}
 
 interface FrontmatterFormProps {
   mode: "create" | "edit";
@@ -28,7 +52,7 @@ function TitleAndSlugFields({
 }: Pick<FrontmatterFormProps, "mode" | "formState" | "setters">) {
   return (
     <>
-      <label className="col-span-2 flex flex-col gap-2 text-sm text-heading">
+      <label className="sm:col-span-2 flex flex-col gap-2 text-sm text-heading">
         제목 *
         <input
           required
@@ -38,7 +62,7 @@ function TitleAndSlugFields({
         />
       </label>
 
-      <label className="col-span-2 flex flex-col gap-2 text-sm text-heading">
+      <label className="sm:col-span-2 flex flex-col gap-2 text-sm text-heading">
         slug *
         <input
           required
@@ -59,7 +83,7 @@ function DescriptionAndMetaFields({
 }: Pick<FrontmatterFormProps, "formState" | "descriptionCount" | "setters">) {
   return (
     <>
-      <label className="col-span-2 flex flex-col gap-2 text-sm text-heading">
+      <label className="sm:col-span-2 flex flex-col gap-2 text-sm text-heading">
         설명 *
         <textarea
           required
@@ -84,15 +108,25 @@ function DescriptionAndMetaFields({
         />
       </label>
 
-      <label className="flex items-center gap-2 text-sm text-heading">
-        <input
-          type="checkbox"
-          checked={formState.published}
-          onChange={(event) => setters.setPublished(event.target.checked)}
-          className={CHECKBOX_CLASS_NAME}
-        />
-        공개 여부
-      </label>
+      <div className="flex flex-col justify-end gap-2">
+        <span className="text-sm text-heading">공개 여부</span>
+        <div className="flex items-center gap-3">
+          <ToggleSwitch
+            checked={formState.published}
+            onChange={setters.setPublished}
+            label="공개 여부"
+          />
+          <span
+            className="rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors"
+            style={{
+              backgroundColor: formState.published ? "rgb(34 197 94 / 0.1)" : "var(--color-muted)",
+              color: formState.published ? "rgb(34 197 94)" : "var(--color-subtle)",
+            }}
+          >
+            {formState.published ? "공개" : "비공개"}
+          </span>
+        </div>
+      </div>
     </>
   );
 }
@@ -103,7 +137,7 @@ function TagFields({
   tagHandlers,
 }: Pick<FrontmatterFormProps, "formState" | "tagInput" | "tagHandlers">) {
   return (
-    <div className="col-span-2 flex flex-col gap-2 text-sm text-heading">
+    <div className="sm:col-span-2 flex flex-col gap-2 text-sm text-heading">
       <span>태그</span>
       <input
         value={tagInput}
@@ -169,7 +203,7 @@ function AdditionalFields({
   setters,
 }: Pick<FrontmatterFormProps, "formState" | "setters">) {
   return (
-    <div className="mt-4 grid grid-cols-2 gap-4">
+    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
       <label className="flex flex-col gap-2 text-sm text-heading">
         저자
         <input
@@ -189,7 +223,7 @@ function AdditionalFields({
         />
       </label>
 
-      <label className="col-span-2 flex flex-col gap-2 text-sm text-heading">
+      <label className="sm:col-span-2 flex flex-col gap-2 text-sm text-heading">
         원문 제목
         <input
           value={formState.sourceTitle}
@@ -203,8 +237,8 @@ function AdditionalFields({
 
 export function FrontmatterForm(props: FrontmatterFormProps) {
   return (
-    <section className="rounded-xl border border-border bg-background p-6">
-      <div className="grid grid-cols-2 gap-4">
+    <section className="rounded-xl border border-border bg-background p-4 sm:p-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TitleAndSlugFields mode={props.mode} formState={props.formState} setters={props.setters} />
         <DescriptionAndMetaFields
           formState={props.formState}

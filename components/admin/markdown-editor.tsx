@@ -6,7 +6,6 @@ import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
 const PREVIEW_DEBOUNCE_MS = 300;
-const EDITOR_MIN_HEIGHT_PX = 500;
 const EDITOR_TEXTAREA_CLASS_NAME =
   "w-full resize-y rounded-md border border-border bg-surface p-3 font-mono text-sm text-body outline-none transition focus:ring-2 focus:ring-accent";
 
@@ -85,8 +84,7 @@ function EditorPane({
         onChange={(event) => onContentChange(event.target.value)}
         onKeyDown={handleEditorKeyDown}
         spellCheck={false}
-        className={EDITOR_TEXTAREA_CLASS_NAME}
-        style={{ minHeight: EDITOR_MIN_HEIGHT_PX }}
+        className={cn(EDITOR_TEXTAREA_CLASS_NAME, "min-h-[300px] md:min-h-[500px]")}
       />
     </div>
   );
@@ -96,8 +94,7 @@ function PreviewPane({ content, isSplitView }: { content: string; isSplitView: b
   return (
     <div className={cn("bg-background p-4", isSplitView && "md:w-1/2")}>
       <div
-        className="overflow-y-auto rounded-md border border-border bg-background p-4"
-        style={{ minHeight: EDITOR_MIN_HEIGHT_PX }}
+        className="min-h-[300px] overflow-y-auto rounded-md border border-border bg-background p-4 md:min-h-[500px]"
       >
         <article className="prose max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
