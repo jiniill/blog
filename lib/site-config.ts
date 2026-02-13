@@ -28,14 +28,14 @@ function getValidatedGiscusRepo(
 }
 
 export const siteConfig = {
-  title: getEnvOrFallback("NEXT_PUBLIC_SITE_TITLE", "My Blog"),
+  title: getEnvOrFallback("NEXT_PUBLIC_SITE_TITLE", "jiniill.dev"),
   description: getEnvOrFallback(
     "NEXT_PUBLIC_SITE_DESCRIPTION",
     "개발, 기술, 그리고 생각을 기록하는 블로그",
   ),
   url: getValidatedUrl("NEXT_PUBLIC_SITE_URL", "https://myblog.vercel.app"),
   author: {
-    name: getEnvOrFallback("NEXT_PUBLIC_AUTHOR_NAME", "Blog Author"),
+    name: getEnvOrFallback("NEXT_PUBLIC_AUTHOR_NAME", "jiniill"),
     github: getValidatedUrl("NEXT_PUBLIC_AUTHOR_GITHUB", "https://github.com"),
     twitter: getValidatedUrl(
       "NEXT_PUBLIC_AUTHOR_TWITTER",

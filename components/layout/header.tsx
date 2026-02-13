@@ -53,7 +53,7 @@ export function Header() {
       <Container className="flex h-16 items-center justify-between">
         {/* 로고 */}
         <Link href="/" className="text-lg font-bold tracking-tight">
-          Blog
+          jiniill.dev
         </Link>
 
         {/* 데스크톱: 필 형태 중앙 내비게이션 */}
