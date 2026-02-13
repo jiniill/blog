@@ -344,6 +344,49 @@
 }
 
 /* ================================================================
+   헤딩 앵커 hover 표시
+   ================================================================ */
+.prose h2 a,
+.prose h3 a,
+.prose h4 a {
+  position: relative;
+  display: inline-block;
+  padding-right: 0.9em;
+  text-decoration: none;
+}
+
+.prose h2 a::after,
+.prose h3 a::after,
+.prose h4 a::after {
+  content: "#";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  color: var(--theme-fg-muted);
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+}
+
+.prose h2 a:hover::after,
+.prose h3 a:hover::after,
+.prose h4 a:hover::after,
+.prose h2 a:focus-visible::after,
+.prose h3 a:focus-visible::after,
+.prose h4 a:focus-visible::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose h2 a::after,
+  .prose h3 a::after,
+  .prose h4 a::after {
+    transition: none;
+  }
+}
+
+/* ================================================================
    Smooth scroll (모션 감도 설정 존중)
    ================================================================ */
 html {
@@ -725,5 +768,107 @@ body {
   .subscribe-dialog::backdrop,
   .subscribe-dialog .subscribe-panel {
     animation-duration: 1ms !important;
+  }
+}
+
+/* ================================================================
+   View Transitions 교차 페이드
+   ================================================================ */
+@keyframes view-transition-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes view-transition-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+::view-transition-old(root) {
+  animation: view-transition-fade-out 200ms ease both;
+}
+
+::view-transition-new(root) {
+  animation: view-transition-fade-in 200ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0ms !important;
+  }
+}
+
+/* ================================================================
+   코드 블록 제목 표시
+   ================================================================ */
+.prose [data-rehype-pretty-code-title] {
+  margin-bottom: 0;
+  padding: 0.45rem 0.75rem;
+  border-top-left-radius: var(--theme-radius-md);
+  border-top-right-radius: var(--theme-radius-md);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background-color: var(--color-code-bg, var(--theme-code-bg));
+  color: var(--color-code-copy-fg, var(--theme-code-copy-fg));
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  border: 1px solid color-mix(in srgb, var(--theme-code-copy-fg) 20%, transparent);
+  border-bottom: 0;
+}
+
+.prose [data-rehype-pretty-code-title] + pre {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* ================================================================
+   인쇄 최적화
+   ================================================================ */
+@media print {
+  header,
+  footer,
+  .back-to-top,
+  .reading-progress,
+  .giscus,
+  .post-comments,
+  .subscribe-cta,
+  .subscribe-dialog,
+  .search-trigger,
+  .search-dialog,
+  .theme-selector,
+  .post-nav {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.9em;
+    word-break: break-all;
+  }
+
+  .prose pre {
+    background: transparent !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    box-shadow: none !important;
+  }
+
+  .prose pre [data-copy-btn] {
+    display: none !important;
+  }
+
+  img {
+    max-width: 100%;
+    break-inside: avoid;
   }
 }

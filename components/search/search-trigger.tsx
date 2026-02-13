@@ -3,13 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { SearchModal } from "@/components/search/search-modal";
-import { getSortedPublishedPosts } from "@/lib/posts";
+import { getPublishedTagCounts, getSortedPublishedPosts } from "@/lib/posts";
 import { toSearchablePosts } from "@/lib/search";
 
 export function SearchTrigger() {
+  /* 검색 모달 열림 상태와 검색 인덱스 데이터를 준비합니다. */
   const [isOpen, setIsOpen] = useState(false);
   const searchablePosts = useMemo(
     () => toSearchablePosts(getSortedPublishedPosts()),
+    [],
+  );
+  const tags = useMemo(
+    () => getPublishedTagCounts().map(([tag]) => tag),
     [],
   );
 
@@ -26,6 +31,7 @@ export function SearchTrigger() {
     return () => document.removeEventListener("keydown", handleShortcut);
   }, []);
 
+  /* 트리거 버튼과 검색 모달을 렌더링합니다. */
   return (
     <>
       <button
@@ -41,6 +47,7 @@ export function SearchTrigger() {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         posts={searchablePosts}
+        tags={tags}
       />
     </>
   );

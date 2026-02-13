@@ -23,6 +23,7 @@ interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   posts: SearchablePost[];
+  tags: string[];
 }
 
 type Phase = "closed" | "opening" | "open" | "closing";
@@ -65,10 +66,18 @@ function phaseReducer(phase: Phase, action: PhaseAction): Phase {
   return phase;
 }
 
+function filterPostsByTags(posts: SearchablePost[], selectedTags: string[]) {
+  if (selectedTags.length === 0) return posts;
+
+  const selectedTagSet = new Set(selectedTags);
+  return posts.filter((post) => post.tags.some((tag) => selectedTagSet.has(tag)));
+}
+
 /* ── 컴포넌트 ── */
 
-export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
+export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) {
   const [query, setQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeIndex, setActiveIndex] = useState(NO_SELECTION);
   const [phase, dispatchPhase] = useReducer(phaseReducer, "closed");
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -76,11 +85,20 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
   const listRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
 
-  const engine = useMemo(() => createPostSearchEngine(posts), [posts]);
-  const results = useMemo(
-    () => searchPosts(engine, posts, query),
-    [engine, posts, query],
+  const hasQuery = query.trim().length > 0;
+  const hasSelectedTags = selectedTags.length > 0;
+  const filteredPosts = useMemo(
+    () => filterPostsByTags(posts, selectedTags),
+    [posts, selectedTags],
   );
+  const engine = useMemo(
+    () => createPostSearchEngine(filteredPosts),
+    [filteredPosts],
+  );
+  const results = useMemo(() => {
+    if (!hasQuery && hasSelectedTags) return filteredPosts;
+    return searchPosts(engine, filteredPosts, query);
+  }, [engine, filteredPosts, hasQuery, hasSelectedTags, query]);
 
   const clamped = useMemo(() => {
     if (results.length === 0) return NO_SELECTION;
@@ -112,11 +130,23 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
     onClose();
   }, [phase, onClose]);
 
+  const toggleTag = useCallback((tag: string) => {
+    setSelectedTags((currentTags) => {
+      if (currentTags.includes(tag)) {
+        return currentTags.filter((currentTag) => currentTag !== tag);
+      }
+
+      return [...currentTags, tag];
+    });
+    setActiveIndex(NO_SELECTION);
+  }, []);
+
   /* 패널 애니메이션 완료 시 phase를 전이합니다. */
   const handlePanelAnimationEnd = useCallback(() => {
     if (phase === "closing") {
       dialogRef.current?.close();
       setQuery("");
+      setSelectedTags([]);
       setActiveIndex(NO_SELECTION);
     }
 
@@ -137,6 +167,11 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
     const item = listRef.current?.children[clamped] as HTMLElement | undefined;
     item?.scrollIntoView({ block: "nearest" });
   }, [clamped]);
+
+  /* 태그 선택이 바뀌면 목록 포커스를 초기화합니다. */
+  useEffect(() => {
+    setActiveIndex(NO_SELECTION);
+  }, [selectedTags]);
 
   /* 키보드 네비게이션을 처리합니다. */
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -160,8 +195,6 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
 
   if (phase === "closed") return null;
 
-  const hasQuery = query.trim().length > 0;
-
   return (
     <dialog
       ref={dialogRef}
@@ -182,6 +215,38 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
         onClick={(e) => e.stopPropagation()}
         onAnimationEnd={handlePanelAnimationEnd}
       >
+        {/* 태그 필터 칩 */}
+        <div className="border-b border-border px-4 py-3">
+          {tags.length > 0 ? (
+            <div className="overflow-x-auto pb-1">
+              <div className="grid min-w-max auto-cols-max grid-flow-col grid-rows-2 gap-2">
+                {tags.map((tag) => {
+                  const isSelected = selectedTags.includes(tag);
+
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleTag(tag)}
+                      className={cn(
+                        "rounded-[var(--theme-radius-sm)] px-3 py-1 text-xs whitespace-nowrap transition-colors",
+                        isSelected
+                          ? "bg-accent text-accent-fg"
+                          : "bg-muted text-body",
+                      )}
+                      aria-pressed={isSelected}
+                    >
+                      #{tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-subtle">표시할 태그가 없습니다.</p>
+          )}
+        </div>
+
         {/* 검색 입력 영역 */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-subtle" />
@@ -261,7 +326,9 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
               <p className="text-sm">
                 {hasQuery
                   ? "검색 결과가 없습니다"
-                  : "게시글이 없습니다"}
+                  : hasSelectedTags
+                    ? "선택한 태그의 글이 없습니다"
+                    : "게시글이 없습니다"}
               </p>
             </div>
           )}

@@ -5,15 +5,20 @@ import {
   getAdjacentPublishedPosts,
   getPublishedPostBySlug,
   getPublishedPosts,
+  getPostsBySeries,
 } from "@/lib/posts";
 import { Container } from "@/components/layout/container";
 import { PostHeader } from "@/components/blog/post-header";
 import { PostBody } from "@/components/blog/post-body";
 import { Comments } from "@/components/blog/comments";
 import { PostNav } from "@/components/blog/post-nav";
+import { SeriesNav } from "@/components/blog/series-nav";
 import { CodeBlockCopy } from "@/components/mdx/code-block-copy";
 import { SubscribeCta } from "@/components/subscribe/subscribe-cta";
 import { TableOfContents } from "@/components/blog/table-of-contents";
+import { ReadingProgress } from "@/components/blog/reading-progress";
+import { BackToTop } from "@/components/ui/back-to-top";
+import { HeadingCopyWrapper } from "@/components/blog/heading-copy-wrapper";
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -51,6 +56,7 @@ export default async function PostPage({ params }: PostPageProps) {
   if (!post) notFound();
 
   const { prevPost, nextPost } = getAdjacentPublishedPosts(slug);
+  const postsInSeries = post.series ? getPostsBySeries(post.series) : [];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,25 +74,38 @@ export default async function PostPage({ params }: PostPageProps) {
   };
 
   return (
-    <Container className="py-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
-      <article className="relative">
-        <PostHeader post={post} />
-        {post.toc.length > 0 && <TableOfContents items={post.toc} />}
-        <CodeBlockCopy>
-          <div className="mt-10">
-            <PostBody code={post.body} />
-          </div>
-        </CodeBlockCopy>
-      </article>
-      <SubscribeCta />
-      <PostNav prev={prevPost} next={nextPost} />
-      <Comments />
-    </Container>
+    <>
+      <ReadingProgress />
+      <Container className="py-16">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+        <article className="relative" data-post-article>
+          <PostHeader post={post} />
+          {post.series && postsInSeries.length > 0 && (
+            <SeriesNav
+              seriesName={post.series}
+              currentSlug={post.slug}
+              posts={postsInSeries}
+            />
+          )}
+          {post.toc.length > 0 && <TableOfContents items={post.toc} />}
+          <CodeBlockCopy>
+            <HeadingCopyWrapper>
+              <div className="mt-10">
+                <PostBody code={post.body} />
+              </div>
+            </HeadingCopyWrapper>
+          </CodeBlockCopy>
+        </article>
+        <SubscribeCta />
+        <PostNav prev={prevPost} next={nextPost} />
+        <Comments />
+        <BackToTop />
+      </Container>
+    </>
   );
 }

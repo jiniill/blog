@@ -11,7 +11,7 @@ export function PostNav({ prev, next }: PostNavProps) {
   if (!prev && !next) return null;
 
   return (
-    <nav className="mt-16 flex items-stretch gap-4 border-t border-border pt-8">
+    <nav className="post-nav mt-16 flex items-stretch gap-4 border-t border-border pt-8">
       {prev ? (
         <Link
           href={prev.permalink}

@@ -8,7 +8,7 @@ export function SubscribeCta() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <section className="mt-12 rounded-[var(--theme-radius-lg)] border border-border bg-surface p-6 text-center sm:p-8">
+    <section className="subscribe-cta mt-12 rounded-[var(--theme-radius-lg)] border border-border bg-surface p-6 text-center sm:p-8">
       <Mail className="mx-auto h-8 w-8 text-subtle" />
       <h3 className="mt-3 text-lg font-semibold text-heading">
         새 글 알림 받기

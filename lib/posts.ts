@@ -6,6 +6,7 @@ interface PublishedPostIndex {
   sortedPosts: Post[];
   postsBySlug: Map<string, Post>;
   postsByTag: Map<string, Post[]>;
+  postsBySeries: Map<string, Post[]>;
   tagCounts: Array<[string, number]>;
   adjacentPostsBySlug: Map<string, { prevPost?: Post; nextPost?: Post }>;
 }
@@ -38,6 +39,20 @@ function addPostToTagBucket(
   postsByTag.set(tag, [post]);
 }
 
+function addPostToSeriesBucket(postsBySeries: Map<string, Post[]>, post: Post) {
+  if (!post.series) {
+    return;
+  }
+
+  const seriesPosts = postsBySeries.get(post.series);
+  if (seriesPosts) {
+    seriesPosts.push(post);
+    return;
+  }
+
+  postsBySeries.set(post.series, [post]);
+}
+
 function buildPostsByTag(sortedPosts: Post[]) {
   const postsByTag = new Map<string, Post[]>();
 
@@ -48,6 +63,42 @@ function buildPostsByTag(sortedPosts: Post[]) {
   });
 
   return postsByTag;
+}
+
+function compareByDateAscWithSlug(firstPost: Post, secondPost: Post) {
+  const firstDate = toDateTimestamp(firstPost.date);
+  const secondDate = toDateTimestamp(secondPost.date);
+  if (firstDate !== secondDate) {
+    return firstDate - secondDate;
+  }
+
+  return firstPost.slug.localeCompare(secondPost.slug, "ko");
+}
+
+function sortBySeriesOrder(postsInSeries: Post[]): Post[] {
+  return [...postsInSeries].sort((firstPost, secondPost) => {
+    const firstOrder = firstPost.seriesOrder ?? Number.POSITIVE_INFINITY;
+    const secondOrder = secondPost.seriesOrder ?? Number.POSITIVE_INFINITY;
+    if (firstOrder !== secondOrder) {
+      return firstOrder - secondOrder;
+    }
+
+    return compareByDateAscWithSlug(firstPost, secondPost);
+  });
+}
+
+function buildPostsBySeries(sortedPosts: Post[]) {
+  const postsBySeries = new Map<string, Post[]>();
+
+  sortedPosts.forEach((post) => {
+    addPostToSeriesBucket(postsBySeries, post);
+  });
+
+  postsBySeries.forEach((seriesPosts, seriesName) => {
+    postsBySeries.set(seriesName, sortBySeriesOrder(seriesPosts));
+  });
+
+  return postsBySeries;
 }
 
 function buildTagCounts(postsByTag: Map<string, Post[]>) {
@@ -83,12 +134,14 @@ function createPublishedPostIndex(): PublishedPostIndex {
   const sortedPosts = sortByDateDesc(publishedPosts);
   const postsBySlug = new Map(publishedPosts.map((post) => [post.slug, post]));
   const postsByTag = buildPostsByTag(sortedPosts);
+  const postsBySeries = buildPostsBySeries(sortedPosts);
 
   return {
     publishedPosts,
     sortedPosts,
     postsBySlug,
     postsByTag,
+    postsBySeries,
     tagCounts: buildTagCounts(postsByTag),
     adjacentPostsBySlug: buildAdjacentPostsBySlug(sortedPosts),
   };
@@ -127,6 +180,10 @@ export function getAdjacentPublishedPosts(slug: string): {
 
 export function getPublishedPostsByTag(tag: string): Post[] {
   return getPublishedPostIndex().postsByTag.get(tag) ?? [];
+}
+
+export function getPostsBySeries(seriesName: string): Post[] {
+  return getPublishedPostIndex().postsBySeries.get(seriesName) ?? [];
 }
 
 export function getPublishedTags(): string[] {

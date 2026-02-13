@@ -60,7 +60,7 @@ export function ThemeSelector() {
   const isDark = resolvedTheme === "dark";
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="theme-selector relative">
       <button
         onClick={() => setOpen(!open)}
         className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--theme-radius-md)] text-subtle hover:text-foreground hover:bg-surface-hover active:scale-95 transition-all duration-150"

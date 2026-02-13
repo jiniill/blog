@@ -28,6 +28,8 @@ export default defineConfig({
           updated: s.isodate().optional(),
           published: s.boolean().default(true),
           tags: s.array(s.string()).default([]),
+          series: s.string().optional(),
+          seriesOrder: s.number().optional(),
           author: s.string().optional(),
           sourceUrl: s.string().url().optional(),
           sourceTitle: s.string().optional(),

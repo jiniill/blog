@@ -9,9 +9,10 @@ import { SubscribeModal } from "@/components/subscribe/subscribe-modal";
 import { ThemeSelector } from "@/components/ui/theme-selector";
 import { Container } from "./container";
 
-const navLinks = [
+const navItems = [
   { href: "/", label: "Home" },
   { href: "/blog", label: "Blog" },
+  { href: "/archive", label: "Archive" },
   { href: "/about", label: "About" },
 ];
 
@@ -69,7 +70,7 @@ export function Header() {
             />
           )}
 
-          {navLinks.map((link) => {
+          {navItems.map((link) => {
             const active = isActive(link.href);
             return (
               <Link
@@ -129,7 +130,7 @@ export function Header() {
       {mobileOpen && (
         <nav id={mobileMenuId} className="border-t border-border sm:hidden">
           <Container className="flex flex-col gap-2 py-4">
-            {navLinks.map((link) => (
+            {navItems.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

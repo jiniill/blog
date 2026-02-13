@@ -43,7 +43,7 @@ export function Comments() {
 
   // 뷰포트 진입 전에는 플레이스홀더만 노출
   return (
-    <div ref={commentsRef} className="mt-16 border-t border-border pt-10">
+    <div ref={commentsRef} className="post-comments mt-16 border-t border-border pt-10">
       {mounted && shouldLoadComments ? (
         <Giscus
           repo={siteConfig.giscus.repo}
