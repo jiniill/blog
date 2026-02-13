@@ -2,11 +2,12 @@ import type { NextConfig } from "next";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
+  /* nonce 미적용 상태에서 strict-dynamic은 CSP3 브라우저에서 인라인 스크립트를 차단함 */
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https:",
+  "connect-src 'self' https://*.supabase.co",
   "frame-src 'self' https://giscus.app",
   "frame-ancestors 'none'",
   "base-uri 'self'",

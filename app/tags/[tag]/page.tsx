@@ -8,28 +8,26 @@ interface TagPageProps {
 }
 
 export async function generateStaticParams() {
-  return getPublishedTags().map((tag) => ({ tag: encodeURIComponent(tag) }));
+  return getPublishedTags().map((tag) => ({ tag }));
 }
 
 export async function generateMetadata({
   params,
 }: TagPageProps): Promise<Metadata> {
   const { tag } = await params;
-  const decoded = decodeURIComponent(tag);
   return {
-    title: `#${decoded}`,
-    description: `"${decoded}" 태그가 달린 글 목록`,
+    title: `#${tag}`,
+    description: `"${tag}" 태그가 달린 글 목록`,
   };
 }
 
 export default async function TagPage({ params }: TagPageProps) {
   const { tag } = await params;
-  const decoded = decodeURIComponent(tag);
-  const filtered = getPublishedPostsByTag(decoded);
+  const filtered = getPublishedPostsByTag(tag);
 
   return (
     <Container className="py-16">
-      <h1 className="text-3xl font-bold tracking-tight">#{decoded}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">#{tag}</h1>
       <p className="mt-2 text-sm text-subtle">
         {filtered.length}개의 글
       </p>

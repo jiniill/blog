@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { FileText, Search, X } from "lucide-react";
 import {
@@ -19,6 +26,10 @@ interface SearchModalProps {
 }
 
 type Phase = "closed" | "opening" | "open" | "closing";
+type PhaseAction =
+  | { type: "OPEN_REQUESTED" }
+  | { type: "ANIMATION_ENDED" }
+  | { type: "CLOSE_REQUESTED" };
 
 const NO_SELECTION = -1;
 
@@ -32,12 +43,34 @@ function cyclePrev(current: number, max: number) {
   return max < 0 ? NO_SELECTION : current <= 0 ? max : current - 1;
 }
 
+function phaseReducer(phase: Phase, action: PhaseAction): Phase {
+  /* 열기 요청에 대한 전이를 처리합니다. */
+  if (action.type === "OPEN_REQUESTED") {
+    if (phase === "closed" || phase === "closing") return "opening";
+    return phase;
+  }
+
+  /* 닫기 요청에 대한 전이를 처리합니다. */
+  if (action.type === "CLOSE_REQUESTED") {
+    if (phase === "opening" || phase === "open") return "closing";
+    return phase;
+  }
+
+  /* 애니메이션 종료 시 최종 상태로 확정합니다. */
+  if (action.type === "ANIMATION_ENDED") {
+    if (phase === "opening") return "open";
+    if (phase === "closing") return "closed";
+  }
+
+  return phase;
+}
+
 /* ── 컴포넌트 ── */
 
 export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(NO_SELECTION);
-  const [phase, setPhase] = useState<Phase>("closed");
+  const [phase, dispatchPhase] = useReducer(phaseReducer, "closed");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -55,26 +88,18 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
     return Math.min(activeIndex, results.length - 1);
   }, [activeIndex, results.length]);
 
-  /* Phase 상태 머신: isOpen 변경에 따라 전이합니다. */
+  /* isOpen 변경에 따라 phase 상태 머신 액션을 디스패치합니다. */
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    if (isOpen && phase === "closed") {
+    if (isOpen) {
       if (!dialog.open) dialog.showModal();
-      setPhase("opening");
-      return;
+      dispatchPhase({ type: "OPEN_REQUESTED" });
+    } else {
+      dispatchPhase({ type: "CLOSE_REQUESTED" });
     }
-
-    if (isOpen && phase === "closing") {
-      setPhase("opening");
-      return;
-    }
-
-    if (!isOpen && (phase === "opening" || phase === "open")) {
-      setPhase("closing");
-    }
-  }, [isOpen, phase]);
+  }, [isOpen]);
 
   /* opening 페이즈에 진입하면 입력창에 포커스를 맞춥니다. */
   useEffect(() => {
@@ -91,17 +116,13 @@ export function SearchModal({ isOpen, onClose, posts }: SearchModalProps) {
 
   /* 패널 애니메이션 완료 시 phase를 전이합니다. */
   const handlePanelAnimationEnd = useCallback(() => {
-    if (phase === "opening") {
-      setPhase("open");
-      return;
-    }
-
     if (phase === "closing") {
       dialogRef.current?.close();
       setQuery("");
       setActiveIndex(NO_SELECTION);
-      setPhase("closed");
     }
+
+    dispatchPhase({ type: "ANIMATION_ENDED" });
   }, [phase]);
 
   const navigateTo = useCallback(
