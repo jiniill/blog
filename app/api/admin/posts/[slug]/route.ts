@@ -7,6 +7,7 @@ import {
   resolveAdminErrorStatus,
   updateAdminPostBySlug,
 } from "@/lib/admin/post-files";
+import { decodeRouteParam } from "@/lib/route-params";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,8 @@ export async function GET(
 
   try {
     const { slug } = await params;
-    const post = await getAdminPostBySlug(slug);
+    const normalizedSlug = decodeRouteParam(slug);
+    const post = await getAdminPostBySlug(normalizedSlug);
     return NextResponse.json({ post });
   } catch (error: unknown) {
     return NextResponse.json(
@@ -48,8 +50,9 @@ export async function PUT(
 
   try {
     const { slug } = await params;
-    const payload = parseAdminPostPayload(await request.json(), slug);
-    const post = await updateAdminPostBySlug(slug, payload);
+    const normalizedSlug = decodeRouteParam(slug);
+    const payload = parseAdminPostPayload(await request.json(), normalizedSlug);
+    const post = await updateAdminPostBySlug(normalizedSlug, payload);
     return NextResponse.json({ post });
   } catch (error: unknown) {
     return NextResponse.json(
@@ -69,7 +72,8 @@ export async function DELETE(
 
   try {
     const { slug } = await params;
-    await deleteAdminPostBySlug(slug);
+    const normalizedSlug = decodeRouteParam(slug);
+    await deleteAdminPostBySlug(normalizedSlug);
     return NextResponse.json({ ok: true });
   } catch (error: unknown) {
     return NextResponse.json(

@@ -1,4 +1,5 @@
-import { posts, type Post } from "#velite";
+import { posts, type Post } from "@/lib/velite";
+import { decodeRouteParam } from "@/lib/route-params";
 import { toDateTimestamp } from "@/lib/utils";
 
 interface PublishedPostIndex {
@@ -155,6 +156,10 @@ function getPublishedPostIndex() {
   return cachedPublishedPostIndex;
 }
 
+function normalizeLookupValue(value: string): string {
+  return decodeRouteParam(value);
+}
+
 export function getPublishedPosts(): Post[] {
   return getPublishedPostIndex().publishedPosts;
 }
@@ -168,18 +173,21 @@ export function getRecentPublishedPosts(limit: number): Post[] {
 }
 
 export function getPublishedPostBySlug(slug: string): Post | undefined {
-  return getPublishedPostIndex().postsBySlug.get(slug);
+  return getPublishedPostIndex().postsBySlug.get(normalizeLookupValue(slug));
 }
 
 export function getAdjacentPublishedPosts(slug: string): {
   prevPost?: Post;
   nextPost?: Post;
 } {
-  return getPublishedPostIndex().adjacentPostsBySlug.get(slug) ?? {};
+  return (
+    getPublishedPostIndex().adjacentPostsBySlug.get(normalizeLookupValue(slug)) ??
+    {}
+  );
 }
 
 export function getPublishedPostsByTag(tag: string): Post[] {
-  return getPublishedPostIndex().postsByTag.get(tag) ?? [];
+  return getPublishedPostIndex().postsByTag.get(normalizeLookupValue(tag)) ?? [];
 }
 
 export function getPostsBySeries(seriesName: string): Post[] {

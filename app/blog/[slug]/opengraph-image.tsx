@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getPublishedPostBySlug, getPublishedPosts } from "@/lib/posts";
 import { siteConfig } from "@/lib/site-config";
+import { decodeRouteParam } from "@/lib/route-params";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -26,7 +27,8 @@ export default async function OGImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getPublishedPostBySlug(slug);
+  const normalizedSlug = decodeRouteParam(slug);
+  const post = getPublishedPostBySlug(normalizedSlug);
 
   if (!post) {
     return new ImageResponse(

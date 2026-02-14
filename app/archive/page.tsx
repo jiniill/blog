@@ -1,4 +1,4 @@
-import type { Post } from "#velite";
+import type { Post } from "@/lib/velite";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/layout/container";

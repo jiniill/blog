@@ -1,4 +1,4 @@
-import type { Post } from "#velite";
+import type { Post } from "@/lib/velite";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 

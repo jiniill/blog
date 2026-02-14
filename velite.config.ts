@@ -22,7 +22,7 @@ export default defineConfig({
       schema: s
         .object({
           title: s.string().max(120),
-          slug: s.slug("posts"),
+          slug: s.string(),
           description: s.string().max(300),
           date: s.isodate(),
           updated: s.isodate().optional(),

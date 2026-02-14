@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { posts } from "#velite";
+import { posts } from "@/lib/velite";
 import { siteConfig } from "@/lib/site-config";
 
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -1,5 +1,5 @@
 import Fuse, { type IFuseOptions } from "fuse.js";
-import type { Post } from "#velite";
+import type { Post } from "@/lib/velite";
 
 /* ── 타입 ── */
 

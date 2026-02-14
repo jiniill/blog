@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { Post } from "#velite";
+import type { Post } from "@/lib/velite";
 
 interface PostNavProps {
   prev: Post | undefined;

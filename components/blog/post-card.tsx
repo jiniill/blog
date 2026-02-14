@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Post } from "#velite";
+import type { Post } from "@/lib/velite";
 import { formatDate } from "@/lib/utils";
 import { getReadingTimeLabel } from "@/lib/reading-time";
 import { TagBadge } from "./tag-badge";

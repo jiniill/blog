@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getSupabaseClient } from "@/lib/supabase";
+import { decodeRouteParam } from "@/lib/route-params";
 
 export const runtime = "edge";
 
-const VALID_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const VALID_SLUG = /^[\p{Letter}\p{Number}]+(?:-[\p{Letter}\p{Number}]+)*$/u;
 const MAX_SLUG_LENGTH = 200;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 30;
@@ -26,8 +27,13 @@ export async function POST(
 ) {
   /* 요청 파라미터를 검증합니다. */
   const { slug } = await params;
+  const normalizedSlug = decodeRouteParam(slug);
 
-  if (!slug || slug.length > MAX_SLUG_LENGTH || !VALID_SLUG.test(slug)) {
+  if (
+    !normalizedSlug ||
+    normalizedSlug.length > MAX_SLUG_LENGTH ||
+    !VALID_SLUG.test(normalizedSlug)
+  ) {
     return NextResponse.json(
       { error: "유효하지 않은 slug입니다." },
       { status: 400 },
@@ -50,7 +56,7 @@ export async function POST(
   /* 조회수 증가 RPC를 호출합니다. */
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.rpc("increment_view_count", {
-    page_slug: slug,
+    page_slug: normalizedSlug,
     viewer_ip_hash: ipHash,
   });
 

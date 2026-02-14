@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/lib/site-config";
+import { decodeRouteParam } from "@/lib/route-params";
 import {
   getAdjacentPublishedPosts,
   getPublishedPostBySlug,
@@ -32,7 +33,8 @@ export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPublishedPostBySlug(slug);
+  const normalizedSlug = decodeRouteParam(slug);
+  const post = getPublishedPostBySlug(normalizedSlug);
   if (!post) return {};
 
   return {
@@ -52,10 +54,11 @@ export async function generateMetadata({
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-  const post = getPublishedPostBySlug(slug);
+  const normalizedSlug = decodeRouteParam(slug);
+  const post = getPublishedPostBySlug(normalizedSlug);
   if (!post) notFound();
 
-  const { prevPost, nextPost } = getAdjacentPublishedPosts(slug);
+  const { prevPost, nextPost } = getAdjacentPublishedPosts(normalizedSlug);
   const postsInSeries = post.series ? getPostsBySeries(post.series) : [];
 
   const jsonLd = {
