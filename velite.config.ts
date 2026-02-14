@@ -6,6 +6,17 @@ import remarkGfm from "remark-gfm";
 import { rehypeFixEmphasis } from "./lib/rehype-fix-emphasis";
 import { countContentChars } from "./lib/content-char-count";
 
+function extractLocaleFromPath(path: string) {
+  const pathSegments = path.split("/");
+  const postsSegmentIndex = pathSegments.indexOf("posts");
+  const locale = pathSegments[postsSegmentIndex + 1];
+  if (locale === "ko" || locale === "en") {
+    return locale;
+  }
+
+  throw new Error(`Unsupported locale in post path: ${path}`);
+}
+
 export default defineConfig({
   root: "content",
   output: {
@@ -18,10 +29,13 @@ export default defineConfig({
   collections: {
     posts: {
       name: "Post",
-      pattern: "posts/**/*.mdx",
+      pattern: "posts/{ko,en}/**/*.mdx",
       schema: s
         .object({
           title: s.string().max(120),
+          locale: s
+            .custom()
+            .transform((_, { meta }) => extractLocaleFromPath(meta.path)),
           slug: s.string(),
           description: s.string().max(300),
           date: s.isodate(),
@@ -45,7 +59,7 @@ export default defineConfig({
         })
         .transform((data) => ({
           ...data,
-          permalink: `/blog/${data.slug}`,
+          permalink: `/${data.locale}/blog/${data.slug}`,
         })),
     },
   },

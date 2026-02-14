@@ -1,14 +1,12 @@
 import type { Post } from "@/lib/velite";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { getSortedPublishedPosts } from "@/lib/posts";
+import { isValidLocale, type Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { toDate } from "@/lib/utils";
-
-export const metadata: Metadata = {
-  title: "Archive",
-  description: "연도별 글 아카이브",
-};
 
 interface ArchiveYearGroup {
   year: number;
@@ -45,10 +43,17 @@ function groupPostsByYear(posts: Post[]): ArchiveYearGroup[] {
   }));
 }
 
-function ArchiveYearSection({ year, posts }: ArchiveYearGroup) {
+function ArchiveYearSection({
+  year,
+  posts,
+  yearSuffix,
+}: ArchiveYearGroup & { yearSuffix: string }) {
   return (
     <section key={year}>
-      <h2 className="text-2xl font-bold tracking-tight">{year}년</h2>
+      <h2 className="text-2xl font-bold tracking-tight">
+        {year}
+        {yearSuffix}
+      </h2>
       <ul className="mt-5 space-y-2.5">
         {posts.map((post) => (
           <li key={post.slug}>
@@ -74,12 +79,40 @@ function ArchiveYearSection({ year, posts }: ArchiveYearGroup) {
   );
 }
 
-export default function ArchivePage() {
-  const groupedPosts = groupPostsByYear(getSortedPublishedPosts());
+interface ArchivePageProps {
+  params: Promise<{ locale: string }>;
+}
+
+function resolveLocale(rawLocale: string): Locale {
+  if (isValidLocale(rawLocale)) {
+    return rawLocale;
+  }
+
+  notFound();
+}
+
+export async function generateMetadata({
+  params,
+}: ArchivePageProps): Promise<Metadata> {
+  const { locale: rawLocale } = await params;
+  if (!isValidLocale(rawLocale)) return {};
+  const t = getDictionary(rawLocale);
+
+  return {
+    title: t.archive.title,
+    description: t.archive.description,
+  };
+}
+
+export default async function ArchivePage({ params }: ArchivePageProps) {
+  const { locale: rawLocale } = await params;
+  const locale = resolveLocale(rawLocale);
+  const t = getDictionary(locale);
+  const groupedPosts = groupPostsByYear(getSortedPublishedPosts(locale));
 
   return (
     <Container className="py-16">
-      <h1 className="text-3xl font-bold tracking-tight">Archive</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t.archive.title}</h1>
       {groupedPosts.length > 0 ? (
         <div className="mt-10 space-y-12">
           {groupedPosts.map((group) => (
@@ -87,11 +120,12 @@ export default function ArchivePage() {
               key={group.year}
               year={group.year}
               posts={group.posts}
+              yearSuffix={t.archive.yearSuffix}
             />
           ))}
         </div>
       ) : (
-        <p className="mt-10 text-sm text-subtle">아직 작성된 글이 없습니다.</p>
+        <p className="mt-10 text-sm text-subtle">{t.archive.noPosts}</p>
       )}
     </Container>
   );

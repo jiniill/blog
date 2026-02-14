@@ -1,0 +1,271 @@
+---
+title: "Harness Engineering: Leveraging Codex in an Agent-First World"
+slug: "harness-engineering"
+description: "Lessons learned from an internal OpenAI team that built and shipped a million-line software product in just 5 months using only Codex agents."
+date: 2026-02-12
+published: true
+tags:
+  - "AI"
+  - "Software Engineering"
+  - "Agents"
+  - "Codex"
+author: "Ryan Lopopolo, OpenAI Technical Staff"
+sourceUrl: "https://openai.com/index/harness-engineering/"
+sourceTitle: "Harness engineering: leveraging Codex in an agent-first world"
+---
+
+## TL;DR
+
+An internal OpenAI team built and shipped a **million-line software product** in about 5 months using only Codex agents, with **zero lines of hand-written code**. This post distills the lessons learned from that experiment.
+
+---
+
+## 1. Experiment Overview
+
+- In late August 2025, the first commit was made to an empty Git repository.
+- Everything from the initial scaffolding (repo structure, CI setup, formatting rules, package manager, app framework) to the `AGENTS.md` file that instructs the agents was written by Codex.
+- Results after 5 months:
+  - **~1 million lines** of code (app logic, infrastructure, tooling, docs, internal utilities)
+  - **~1,500 PRs** merged (starting with 3 engineers → now 7)
+  - **~3.5 PRs per engineer per day** on average (throughput increased as the team grew)
+  - Hundreds of internal users actively using the product
+- Estimated at roughly **1/10th the time** compared to building it manually.
+
+> **Core philosophy:** Humans steer, agents execute.
+
+---
+
+## 2. Redefining the Engineer's Role
+
+The traditional role of engineers who directly write code has transformed as follows:
+
+| Traditional Role | New Role |
+|-----------|-----------|
+| Writing code | Designing environments and specifying intent |
+| Debugging | Building feedback loops for agents to work within |
+| Code review | Managing agent-to-agent review systems |
+
+### How It Works
+
+- An engineer describes a task via prompt, and Codex executes it to open a PR.
+- The PR completion flow: Codex self-reviews → requests review from another agent → incorporates feedback → iterates until all reviewers approve (a.k.a. the **"Ralph Wiggum Loop"**).
+- Over time, reviews became almost entirely **agent-to-agent**.
+
+### Early Lessons
+
+The reason progress was slow at first wasn't a lack of Codex capability — it was **insufficient environment**. When something failed, the key question wasn't "try harder" but rather **"What capability is the agent missing?"** — then making that capability readable and enforceable.
+
+---
+
+## 3. Improving Application Readability
+
+As code throughput increased, **human QA capacity became the bottleneck**. The solution was to enable agents to verify the app themselves.
+
+### UI Verification
+
+- Made it possible to boot the app per Git worktree, so Codex could run independent instances for each change.
+- Connected **Chrome DevTools Protocol** to the agent runtime → provided DOM snapshots, screenshots, and navigation skills.
+- Codex could independently reproduce bugs → fix them → verify UI behavior.
+
+### Observability
+
+- Provided **ephemeral observability stacks** (logs, metrics, traces) per worktree.
+- Codex could query directly using **LogQL, PromQL, TraceQL**.
+- Prompts like "Ensure service startup completes within 800ms" or "Ensure no spans exceed 2 seconds across these 4 key user journeys" became executable.
+- Single Codex runs frequently worked for **6+ hours** (often while humans were asleep).
+
+---
+
+## 4. Repository Knowledge as a Single Source of Truth
+
+### The "Giant AGENTS.md" Approach — A Failure
+
+Initially, all instructions were placed in one large AGENTS.md file, which predictably failed.
+
+- **Context is a scarce resource.** A giant instruction file crowds out actual work and code.
+- **When everything is "important," nothing is.** Agents fall back to local pattern matching instead of intentional exploration.
+- **It rots immediately.** Without maintenance, it becomes a graveyard of stale rules.
+- **It's hard to validate.** A single monolith doesn't lend itself to mechanical checks (coverage, freshness, ownership).
+
+### The Solution: Use AGENTS.md as a "Table of Contents"
+
+`AGENTS.md` serves only as a short ~100-line "map," while actual knowledge lives in a structured `docs/` directory.
+
+```
+AGENTS.md              ← Table of Contents (~100 lines)
+ARCHITECTURE.md        ← Top-level architecture map
+docs/
+├── design-docs/       ← Design documents (index + core principles)
+├── exec-plans/        ← Execution plans (active/completed/tech debt)
+├── generated/         ← Auto-generated docs (e.g., DB schema)
+├── product-specs/     ← Product specifications
+├── references/        ← External references (design system, packages, etc.)
+├── DESIGN.md
+├── FRONTEND.md
+├── QUALITY_SCORE.md
+├── RELIABILITY.md
+└── SECURITY.md
+```
+
+### Core Principles
+
+- **Progressive Disclosure:** Agents start from a small, stable entry point and explore deeper only when needed.
+- **Mechanical Enforcement:** Linters and CI jobs validate the knowledge base for freshness, cross-links, and structure.
+- **Documentation Gardener Agent:** Periodically scans for stale docs or docs that diverge from actual code, and auto-generates fix PRs.
+
+---
+
+## 5. Agent Readability Is the Goal
+
+### "If the Agent Can't See It, It Doesn't Exist"
+
+From the agent's perspective, anything not accessible during execution context **effectively doesn't exist.** Google Docs, Slack conversations, knowledge in people's heads — none of it is visible to the system.
+
+Therefore, **even an architecture pattern agreed upon in Slack must be encoded as markdown in the repo** — otherwise it's equally invisible to a new engineer joining 3 months later.
+
+### Technology Selection Criteria
+
+- **Prefer "boring" technology:** Composability, API stability, and sufficient representation in training data make it easy for agents to model.
+- In some cases, **having agents reimplement parts of functionality** instead of importing external libraries proved cheaper. (Example: building a custom concurrency helper instead of `p-limit`, enabling full OpenTelemetry integration and 100% test coverage.)
+
+---
+
+## 6. Enforcing Architecture and "Taste"
+
+### Strict Architectural Model
+
+Each business domain was divided into a fixed set of layers, with dependency direction strictly validated.
+
+```
+Types → Config → Repo → Service → Runtime → UI
+```
+
+Cross-cutting concerns (auth, connectors, telemetry, feature flags) enter only through **a single explicit interface called Providers**. Everything else is prohibited and mechanically enforced.
+
+> This level of architecture is typically introduced when you have hundreds of engineers, but in a coding agent environment, it's an **initial prerequisite**. Constraints enable speed without decay.
+
+### "Taste Invariants"
+
+- Enforced structured logging
+- Schema/type naming conventions
+- File size limits
+- Platform-specific stability requirements
+
+Custom linter error messages **include fix instructions readable by agents**.
+
+### Autonomy Within Boundaries
+
+- Boundaries, correctness, and reproducibility are **centrally enforced**
+- Within boundaries, **significant expressive freedom** is granted to agents (or teams)
+- Agent-generated code may differ from human style preferences, but **if it's correct, maintainable, and readable for future agent runs**, that's sufficient.
+
+---
+
+## 7. Throughput Changes Merge Philosophy
+
+- Operating with **minimal blocking merge gates**
+- PRs have short lifespans
+- Test flakes are resolved via **follow-up runs** rather than infinite blocking
+- In a system where agent throughput far exceeds human attention, **fixes are cheap and waiting is expensive**
+
+> In a low-throughput environment this would be irresponsible, but here it's often the right trade-off.
+
+---
+
+## 8. What "Agent-Generated" Really Means
+
+What agents generate goes far beyond just code.
+
+- Product code and tests
+- CI setup and release tooling
+- Internal developer tools
+- Documentation and design history
+- Evaluation harnesses
+- Review comments and responses
+- Repository management scripts
+- Production dashboard definition files
+
+Humans are always in the loop, but **operating at a different level of abstraction**: setting priorities, translating user feedback into acceptance criteria, and verifying outcomes.
+
+---
+
+## 9. Increasing Levels of Autonomy
+
+Recently, the repository crossed a meaningful threshold where **a single prompt enables Codex to implement features end-to-end**.
+
+What a single prompt can trigger:
+
+1. Verify the current state of the codebase
+2. Reproduce a reported bug
+3. **Record a video** showing the failure
+4. Implement the fix
+5. Boot the app and verify the fix
+6. **Record a second video** showing the resolution
+7. Open a PR
+8. Respond to agent and human feedback
+9. Detect and resolve build failures
+10. **Escalate to a human** only when judgment is required
+11. Merge the changes
+
+> This behavior depends heavily on this repository's specific structure and tooling. It should not be assumed to generalize without similar investment.
+
+---
+
+## 10. Entropy and Garbage Collection
+
+### The Problem
+
+Codex replicates patterns already present in the repository — including incomplete or suboptimal ones. Over time, **drift** naturally occurs.
+
+### Initial Response (Failed)
+
+Spending every Friday (20% of the week) on cleaning up "AI slop" proved unscalable.
+
+### The Solution: Golden Principles + Automated Cleanup Process
+
+**"Golden principles"** were encoded directly into the repository, and regular cleanup processes were built.
+
+Examples:
+- Prefer **shared utility packages** over ad-hoc helpers → centralize invariants
+- Forbid YOLO-style data exploration → **validate at boundaries or rely on typed SDKs**
+
+On a regular cadence, background Codex tasks:
+- Scan for deviations
+- Update quality grades
+- Generate targeted refactoring PRs
+
+Most are reviewable within 1 minute and auto-merged.
+
+> **Technical debt is like a high-interest loan.** It's almost always better to pay it off in small daily installments than to let it accumulate and try to pay it all at once.
+
+---
+
+## 11. What We're Still Learning
+
+### What's Confirmed
+
+- Building software still requires discipline, but that discipline manifests in **scaffolding (environment, abstractions, feedback loops)**, not in code.
+- Tooling and control systems that keep the codebase consistent are increasingly important.
+
+### What We Don't Know Yet
+
+- How **multi-year architectural consistency** evolves in a fully agent-generated system.
+- Where human judgment provides the **greatest leverage**.
+- How this system will **evolve** as model performance continues to improve.
+
+---
+
+## Key Lessons Summary
+
+| # | Lesson |
+|---|------|
+| 1 | Give agents a **map**, not a 1,000-page manual |
+| 2 | If the agent can't see it, **it doesn't exist** — put all important knowledge in the repo |
+| 3 | When docs hit their limits, **promote rules to code** (linters, tests) |
+| 4 | "Boring" technology is the **best technology** for agents |
+| 5 | Introduce architectural constraints early to enable **speed without decay** |
+| 6 | Boundaries are **centrally enforced**; within boundaries, grant **autonomy** |
+| 7 | In the agent era, fixes are cheap and waiting is expensive — **change your merge philosophy** |
+| 8 | Build a **garbage collection** process that pays off tech debt in small daily increments |
+| 9 | Give agents the ability to **directly see** app UI, logs, and metrics |
+| 10 | The human role is not writing code — it's **designing environments and specifying intent** |

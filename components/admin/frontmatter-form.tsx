@@ -127,6 +127,13 @@ function DescriptionAndMetaFields({
           </span>
         </div>
       </div>
+
+      <div className="flex flex-col gap-2 text-sm text-heading">
+        <span>언어</span>
+        <span className="inline-flex h-[38px] items-center rounded-md border border-border bg-muted px-3 text-sm text-subtle">
+          {formState.locale === "en" ? "English (EN)" : "한국어 (KO)"}
+        </span>
+      </div>
     </>
   );
 }

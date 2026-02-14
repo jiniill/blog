@@ -55,6 +55,7 @@ function mapFormStateToPayload(formState: PostFormState): AdminPostPayload {
     sourceUrl: trimToOptionalText(formState.sourceUrl),
     sourceTitle: trimToOptionalText(formState.sourceTitle),
     references: formState.references.filter((ref) => ref.title.trim() && ref.url.trim()),
+    locale: formState.locale || "ko",
     content: formState.content,
   };
 }

@@ -20,6 +20,7 @@ export interface AdminPostFrontmatter {
 }
 
 export interface AdminPostPayload extends AdminPostFrontmatter {
+  locale: string;
   content: string;
 }
 

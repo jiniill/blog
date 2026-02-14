@@ -1,7 +1,8 @@
 import { Feed } from "feed";
 import { siteConfig } from "@/lib/site-config";
 import { getSortedPublishedPosts } from "@/lib/posts";
-import { toDate } from "@/lib/utils";
+import { locales } from "@/lib/i18n/types";
+import { toDate, toDateTimestamp } from "@/lib/utils";
 
 export async function GET() {
   const feed = new Feed({
@@ -17,9 +18,11 @@ export async function GET() {
     },
   });
 
-  const sortedPosts = getSortedPublishedPosts();
+  const allPosts = locales
+    .flatMap((locale) => getSortedPublishedPosts(locale))
+    .sort((a, b) => toDateTimestamp(b.date) - toDateTimestamp(a.date));
 
-  for (const post of sortedPosts) {
+  for (const post of allPosts) {
     feed.addItem({
       title: post.title,
       id: `${siteConfig.url}${post.permalink}`,

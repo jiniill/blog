@@ -1,13 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useSearchParams } from "next/navigation";
 import { AdminPostEditor } from "@/components/admin/post-editor";
+import { defaultLocale, isValidLocale } from "@/lib/i18n/types";
+
+const LOCALE_DISPLAY: Record<string, string> = {
+  ko: "한국어",
+  en: "English",
+};
 
 export default function AdminNewPostPage() {
   if (process.env.NODE_ENV !== "development") {
     notFound();
   }
+
+  const searchParams = useSearchParams();
+  const rawLocale = searchParams.get("locale") ?? defaultLocale;
+  const locale = isValidLocale(rawLocale) ? rawLocale : defaultLocale;
 
   return (
     <div className="space-y-4">
@@ -20,8 +30,11 @@ export default function AdminNewPostPage() {
           &larr;
         </Link>
         <h2 className="text-2xl font-semibold text-heading">새 글 작성</h2>
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-heading">
+          {LOCALE_DISPLAY[locale] ?? locale}
+        </span>
       </div>
-      <AdminPostEditor mode="create" />
+      <AdminPostEditor mode="create" locale={locale} />
     </div>
   );
 }

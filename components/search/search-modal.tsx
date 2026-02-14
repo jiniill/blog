@@ -16,6 +16,8 @@ import {
   type SearchablePost,
 } from "@/lib/search";
 import { formatDate, cn } from "@/lib/utils";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 /* ── 타입 ── */
 
@@ -24,6 +26,7 @@ interface SearchModalProps {
   onClose: () => void;
   posts: SearchablePost[];
   tags: string[];
+  locale: Locale;
 }
 
 type Phase = "closed" | "opening" | "open" | "closing";
@@ -75,7 +78,7 @@ function filterPostsByTags(posts: SearchablePost[], selectedTags: string[]) {
 
 /* ── 컴포넌트 ── */
 
-export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) {
+export function SearchModal({ isOpen, onClose, posts, tags, locale }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeIndex, setActiveIndex] = useState(NO_SELECTION);
@@ -85,6 +88,7 @@ export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) 
   const listRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
 
+  const t = getDictionary(locale);
   const hasQuery = query.trim().length > 0;
   const hasSelectedTags = selectedTags.length > 0;
   const filteredPosts = useMemo(
@@ -243,7 +247,7 @@ export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) 
               </div>
             </div>
           ) : (
-            <p className="text-xs text-subtle">표시할 태그가 없습니다.</p>
+            <p className="text-xs text-subtle">{t.search.noTags}</p>
           )}
         </div>
 
@@ -258,7 +262,7 @@ export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) 
               setActiveIndex(NO_SELECTION);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="검색어를 입력하세요..."
+            placeholder={t.search.placeholder}
             className="w-full bg-transparent text-sm text-foreground placeholder:text-subtle outline-none"
           />
           {query && (
@@ -270,7 +274,7 @@ export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) 
                 inputRef.current?.focus();
               }}
               className="shrink-0 rounded-[var(--theme-radius-sm)] p-1 text-subtle transition-colors hover:text-foreground"
-              aria-label="검색어 지우기"
+              aria-label={t.search.clearQuery}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -306,7 +310,7 @@ export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) 
                         </p>
                         <div className="mt-1 flex items-center gap-2 text-[11px] text-subtle">
                           <time dateTime={post.date}>
-                            {formatDate(post.date)}
+                            {formatDate(post.date, locale)}
                           </time>
                           {post.tags.length > 0 && (
                             <span className="truncate">
@@ -325,10 +329,10 @@ export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) 
               <Search className="h-8 w-8 opacity-30" />
               <p className="text-sm">
                 {hasQuery
-                  ? "검색 결과가 없습니다"
+                  ? t.search.noResults
                   : hasSelectedTags
-                    ? "선택한 태그의 글이 없습니다"
-                    : "게시글이 없습니다"}
+                    ? t.search.noTagResults
+                    : t.search.noPosts}
               </p>
             </div>
           )}
@@ -338,15 +342,15 @@ export function SearchModal({ isOpen, onClose, posts, tags }: SearchModalProps) 
         <div className="flex items-center gap-4 border-t border-border px-4 py-2 text-[11px] text-subtle">
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-border-muted bg-surface px-1 py-0.5 font-mono text-[10px]">↑↓</kbd>
-            이동
+            {t.search.keyMove}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-border-muted bg-surface px-1 py-0.5 font-mono text-[10px]">↵</kbd>
-            열기
+            {t.search.keyOpen}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-border-muted bg-surface px-1 py-0.5 font-mono text-[10px]">esc</kbd>
-            닫기
+            {t.search.keyClose}
           </span>
         </div>
       </div>

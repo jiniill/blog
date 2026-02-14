@@ -2,8 +2,13 @@ import Link from "next/link";
 import { Github, Rss } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { Container } from "./container";
+import type { Locale } from "@/lib/i18n/types";
 
-export function Footer() {
+interface FooterProps {
+  locale: Locale;
+}
+
+export function Footer({ locale }: FooterProps) {
   return (
     <footer className="border-t border-border">
       <Container className="flex items-center justify-between py-8">

@@ -1,13 +1,23 @@
 import type { Post } from "@/lib/velite";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { formatDate } from "@/lib/utils";
 import { getReadingTimeLabel } from "@/lib/reading-time";
 import { TagBadge } from "./tag-badge";
 import { ViewCounter } from "./view-counter";
 
-export function PostHeader({ post }: { post: Post }) {
+export function PostHeader({
+  post,
+  locale,
+}: {
+  post: Post;
+  locale: Locale;
+}) {
+  const t = getDictionary(locale);
   const readingTimeLabel = getReadingTimeLabel(
     post.metadata.charCount,
     post.metadata.wordCount,
+    t.readingTime,
   );
 
   return (
@@ -16,7 +26,7 @@ export function PostHeader({ post }: { post: Post }) {
         {post.title}
       </h1>
       <div className="flex items-center gap-1.5 text-sm text-subtle">
-        <time dateTime={post.date}>{formatDate(post.date)}</time>
+        <time dateTime={post.date}>{formatDate(post.date, locale)}</time>
         {readingTimeLabel && (
           <>
             <span aria-hidden="true">&middot;</span>
@@ -28,7 +38,7 @@ export function PostHeader({ post }: { post: Post }) {
       {post.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {post.tags.map((tag) => (
-            <TagBadge key={tag} tag={tag} />
+            <TagBadge key={tag} tag={tag} locale={locale} />
           ))}
         </div>
       )}
@@ -36,12 +46,12 @@ export function PostHeader({ post }: { post: Post }) {
         <div className="text-sm text-subtle space-y-0.5">
           {post.author && (
             <p>
-              <span className="font-medium">저자:</span> {post.author}
+              <span className="font-medium">{t.post.author}</span> {post.author}
             </p>
           )}
           {post.sourceTitle && (
             <p>
-              <span className="font-medium">원문:</span>{" "}
+              <span className="font-medium">{t.post.source}</span>{" "}
               {post.sourceUrl ? (
                 <a
                   href={post.sourceUrl}
@@ -60,7 +70,7 @@ export function PostHeader({ post }: { post: Post }) {
             <div className="space-y-0.5">
               {post.references.map((ref, index) => (
                 <p key={index}>
-                  <span className="font-medium">참고:</span>{" "}
+                  <span className="font-medium">{t.post.reference}</span>{" "}
                   <a
                     href={ref.url}
                     target="_blank"

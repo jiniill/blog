@@ -1,9 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { notFound } from "next/navigation";
 import type { AdminPostListItem } from "@/lib/admin/post-types";
+import { defaultLocale, type Locale } from "@/lib/i18n/types";
+
+const LOCALE_LABELS: Record<Locale, string> = {
+  ko: "한국어",
+  en: "English",
+};
+
+function deriveLocaleFromFilePath(filePath: string): Locale {
+  const segments = filePath.split("/");
+  const postsIndex = segments.indexOf("posts");
+  if (postsIndex >= 0 && postsIndex + 1 < segments.length) {
+    const candidate = segments[postsIndex + 1];
+    if (candidate === "ko" || candidate === "en") return candidate;
+  }
+  return defaultLocale;
+}
 
 async function readErrorMessage(response: Response) {
   try {
@@ -201,16 +217,41 @@ export default function AdminPostListPage() {
     }
   }
 
+  const [activeLocale, setActiveLocale] = useState<Locale>(defaultLocale);
+
+  const filteredPosts = useMemo(
+    () => posts.filter((post) => deriveLocaleFromFilePath(post.filePath) === activeLocale),
+    [posts, activeLocale],
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-heading">글 목록</h2>
         <Link
-          href="/admin/new"
+          href={`/admin/new?locale=${activeLocale}`}
           className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-fg transition hover:opacity-90"
         >
           새 글 작성
         </Link>
+      </div>
+
+      {/* 언어 탭 */}
+      <div className="flex gap-1 rounded-lg border border-border bg-surface p-1">
+        {(["ko", "en"] as const).map((locale) => (
+          <button
+            key={locale}
+            type="button"
+            onClick={() => setActiveLocale(locale)}
+            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              activeLocale === locale
+                ? "bg-accent text-accent-fg"
+                : "text-subtle hover:text-heading hover:bg-surface-hover"
+            }`}
+          >
+            {LOCALE_LABELS[locale]}
+          </button>
+        ))}
       </div>
 
       {errorMessage && (
@@ -228,11 +269,11 @@ export default function AdminPostListPage() {
             />
           ))}
         </div>
-      ) : posts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <div className="rounded-xl border border-border bg-surface px-6 py-12 text-center">
-          <p className="text-body">아직 작성된 글이 없습니다.</p>
+          <p className="text-body">{LOCALE_LABELS[activeLocale]} 글이 아직 없습니다.</p>
           <Link
-            href="/admin/new"
+            href={`/admin/new?locale=${activeLocale}`}
             className="mt-3 inline-block text-sm font-medium text-link hover:text-link-hover"
           >
             첫 글을 작성해 보세요
@@ -242,7 +283,7 @@ export default function AdminPostListPage() {
         <>
           {/* 모바일: 카드 레이아웃 */}
           <div className="space-y-3 md:hidden">
-            {posts.map((post) => (
+            {filteredPosts.map((post) => (
               <PostCard
                 key={post.slug}
                 post={post}
@@ -265,7 +306,7 @@ export default function AdminPostListPage() {
                 </tr>
               </thead>
               <tbody>
-                {posts.map((post) => (
+                {filteredPosts.map((post) => (
                   <PostTableRow
                     key={post.slug}
                     post={post}

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 interface TocEntry {
   title: string;
@@ -9,7 +11,6 @@ interface TocEntry {
   items: TocEntry[];
 }
 
-/** 중첩된 TOC 엔트리에서 모든 ID를 평탄화 */
 function flattenIds(items: TocEntry[]): string[] {
   return items.flatMap((item) => [
     item.url.slice(1),
@@ -17,8 +18,15 @@ function flattenIds(items: TocEntry[]): string[] {
   ]);
 }
 
-export function TableOfContents({ items }: { items: TocEntry[] }) {
+export function TableOfContents({
+  items,
+  locale,
+}: {
+  items: TocEntry[];
+  locale: Locale;
+}) {
   const [activeId, setActiveId] = useState("");
+  const t = getDictionary(locale);
 
   useEffect(() => {
     const ids = flattenIds(items);
@@ -55,11 +63,11 @@ export function TableOfContents({ items }: { items: TocEntry[] }) {
   return (
     <aside
       className="hidden xl:block absolute -right-4 top-0 h-full w-56 translate-x-full"
-      aria-label="목차"
+      aria-label={t.toc.title}
     >
       <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-subtle">
-          목차
+          {t.toc.title}
         </p>
         <TocList items={items} activeId={activeId} depth={0} />
       </nav>

@@ -1,0 +1,123 @@
+---
+title: "GPT-5.2 Discovers a New Concept in Physics"
+slug: "gpt-52-discovers-new-physics-concept"
+description: "The story of how GPT-5.2 discovered that a physics formula believed to be \"zero\" for decades was in fact nonzero, and even proposed a general formula."
+date: 2026-02-14
+published: true
+tags:
+  - "AI"
+  - "OpenAI"
+  - "Physics"
+  - "Research"
+author: "A. Guevara (IAS), A. Lupsasca (Vanderbilt/OpenAI), D. Skinner (Cambridge), A. Strominger (Harvard), K. Weil (OpenAI)"
+sourceUrl: "https://openai.com/index/new-result-theoretical-physics/"
+sourceTitle: "GPT-5.2 derives a new result in theoretical physics (OpenAI)"
+references:
+  - title: "Single-minus gluon tree amplitudes are 'not zero' (arXiv)"
+    url: "https://arxiv.org/abs/2602.12176"
+---
+## TL;DR
+
+"This case always gives zero, so there's no need to compute it" — this common wisdom in particle physics, accepted for decades, turned out to be wrong, thanks to GPT-5.2.
+
+---
+
+## First, What Was Supposed to Be "Zero"?
+
+There are four fundamental forces in the universe. Among them, the force that binds quarks together inside atomic nuclei is called the **strong force**, and the particles that carry this force are called **gluons**. Think of them as the nuclear-force equivalent of the photon, which carries light.
+
+When physicists calculate the processes by which gluons collide and scatter, they compute values called **scattering amplitudes**. In simple terms, these numbers represent "how likely is it that these particles react in this particular way?"
+
+Gluons, like other particles, have a property called **helicity**. Roughly speaking, it describes whether the particle spins clockwise (+) or counterclockwise (−) relative to its direction of travel. When multiple gluons scatter, the shape of the amplitude changes depending on the +/− combination.
+
+This is where the configuration in question comes in. **When exactly one out of n gluons has (−) helicity and the remaining (n−1) all have (+)**, textbooks stated that the answer was **always zero**. "No need to compute — it's zero, move on" was how physicists treated this region for decades.
+
+---
+
+## "Wait, Is It Really Zero?"
+
+In February 2026, physicists from the Institute for Advanced Study (Princeton), Harvard, Cambridge, and Vanderbilt, together with OpenAI, posted [a preprint](https://arxiv.org/abs/2602.12176). The conclusion was clear.
+
+**"It's not zero."**
+
+The existing proof had missed something. The standard argument assumed that the gluons' momenta (energy and direction) were in a **generic, non-special configuration**. But the authors identified a specific momentum arrangement they called **"half-collinear"** — a mathematically precise region where gluon momenta align under particular conditions. In this region, the premises of the existing proof break down, and the amplitude is genuinely nonzero.
+
+Think of it this way: "This door never opens" was actually "This door doesn't open when you push from the front," but they discovered it opens when pushed from a specific angle.
+
+Note that this result holds under conditions like Klein space or complexified momenta — mathematical settings distinct from our physical spacetime. However, in physics, compact formulas found under such special conditions often turn out to carry deep significance in more general contexts.
+
+---
+
+## What GPT-5.2 Did
+
+Here's where it gets truly interesting — **the role AI played in this discovery**.
+
+### Step 1: Humans Computed Individual Cases
+
+The authors manually calculated the cases for 3, 4, 5, and 6 gluons. The results were horrendously complex expressions. The kind that exhibits "super-exponential growth" in complexity as the number of gluons increases.
+
+### Step 2: GPT-5.2 Simplified and Found Patterns
+
+When GPT-5.2 Pro was fed these complex expressions, it simplified them into much more compact forms. But it didn't stop there — it **identified patterns across the simplified expressions and conjectured a general formula for arbitrary n**. This is Eq. (39) in the paper, the most important formula of the work.
+
+Extracting a concise general law from complex individual cases — one of the most valuable yet most difficult tasks in physics — was accomplished by AI.
+
+### Step 3: AI Provided a Proof
+
+An enhanced internal version of GPT-5.2 at OpenAI spent approximately 12 hours reasoning independently about the problem, arriving at the same formula and producing a **formal proof**. This wasn't a single prompt-response exchange — the AI spent half a day focused on a single problem, completing the proof.
+
+### Step 4: Humans Verified
+
+The authors then checked that the formula satisfied established physical consistency conditions (Berends–Giele recurrence relations, Weinberg soft theorems, etc.). Everything passed.
+
+In summary: **Humans generated the data → AI found patterns and conjectured a formula → AI proved it → Humans verified it.** A genuinely novel workflow for scientific research.
+
+---
+
+## What the Experts Are Saying
+
+### Nima Arkani-Hamed (Institute for Advanced Study, Theoretical High-Energy Physics)
+
+Arkani-Hamed, a world authority on scattering amplitudes, gave a notably positive comment on the result.
+
+> "The physics of these highly degenerate scattering processes is something I've been curious about since first encountering them 15 years ago. I'm excited to see the remarkably compact expressions that emerged in this paper."
+
+He cited a recurring pattern in physics: expressions that appear hopelessly complex when computed via textbook methods often turn out to be surprisingly simple — and that simplicity frequently serves as the starting point for discovering deeper new structures. He added:
+
+> "'Finding compact formulas' has always been a tricky task, but I've long felt it could be automated with computers. The case in this paper seems especially well-suited to leveraging the power of modern AI tools."
+
+### Nathaniel Craig (UC Santa Barbara, High-Energy Physics / Particle Phenomenology)
+
+Craig offered a more direct assessment of the paper's academic standing and methodological significance.
+
+> "This preprint clearly advances the frontier of theoretical physics and is journal-quality research whose novelty will drive future developments and follow-up papers."
+
+He described the paper as an example that "offers a glimpse into the future of AI-assisted science," saying there is "no question" that dialogue between physicists and LLMs can produce fundamentally new knowledge. He characterized the paper as establishing **a template for validating LLM-derived insights** — a structure where AI conjectures and humans verify.
+
+### Andrew Strominger (Harvard, Paper Co-Author)
+
+Strominger, a co-author of the paper, made a noteworthy statement circulated on X (Twitter):
+
+> "This is the first time I've seen AI solve a problem in my field that humans might not have been able to."
+
+When a theoretical physicist with decades of experience uses language like that, it speaks to the weight of the result.
+
+---
+
+## Why This Matters
+
+### From a Physics Perspective
+
+A region that had been ignored for decades because "it's zero anyway" has now been opened up. This signals that there may be undiscovered structures still hidden within quantum field theory. The authors have already indicated they are extending the same approach to **graviton** amplitudes — the particles that mediate gravity.
+
+### From the Perspective of AI and Science
+
+AI contributions to science come in multiple tiers. Using AI as an "assistant tool" for data cleaning, simulation acceleration, and literature search is already standard practice. But this case is a level above that. **AI recognized patterns, conjectured new formulas, and proved them.** To be sure, defining which problems to solve, performing the initial calculations, and interpreting the physical meaning of the results were still done by human physicists. AI didn't replace physicists — it played a decisive role precisely where humans struggle most.
+
+---
+
+## Closing Thoughts
+
+This paper is currently a preprint awaiting peer review. The authors have explicitly stated they "welcome feedback from the community." Follow-up research — including extension to graviton amplitudes — is already underway.
+
+A structure where physicists and AI each handle what they do best to produce new knowledge. This paper is an impressive case demonstrating that such a structure can actually work. Peer review and follow-up studies will further clarify the weight of this result.

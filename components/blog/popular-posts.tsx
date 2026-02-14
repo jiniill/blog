@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 const SKELETON_ROW_COUNT = 5;
 
@@ -21,6 +23,7 @@ interface PopularResponse {
 
 interface PopularPostsProps {
   postsBySlug: Record<string, PopularPostMeta>;
+  locale: Locale;
 }
 
 function normalizePopularItems(payload: PopularResponse) {
@@ -60,7 +63,6 @@ function usePopularPostItems() {
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    /* 컴포넌트 생명주기 동안만 유효한 요청을 보장합니다. */
     const controller = new AbortController();
 
     fetch("/api/popular", { signal: controller.signal })
@@ -78,27 +80,28 @@ function usePopularPostItems() {
     return () => controller.abort();
   }, []);
 
-  /* 렌더링 계층에서 사용할 상태를 단일 객체로 반환합니다. */
   return { items, hasError };
 }
 
-export function PopularPosts({ postsBySlug }: PopularPostsProps) {
-  /* 인기 글 API 응답을 조회하고 정적 메타데이터와 결합합니다. */
+export function PopularPosts({ postsBySlug, locale }: PopularPostsProps) {
   const { items, hasError } = usePopularPostItems();
+  const t = getDictionary(locale);
 
   const popularPosts = useMemo(() => {
     if (!items) return [];
     return buildPopularList(items, postsBySlug);
   }, [items, postsBySlug]);
 
-  /* 로딩/빈 상태를 먼저 처리합니다. */
   if (items === null) return renderSkeletonRows();
 
   if (hasError || popularPosts.length === 0) {
-    return <p className="text-sm text-subtle">아직 집계된 인기 글이 없습니다.</p>;
+    return (
+      <p className="text-sm text-subtle">{t.home.noPopularPosts}</p>
+    );
   }
 
-  /* 순위 번호가 포함된 인기 글 리스트를 렌더링합니다. */
+  const intlLocale = locale === "ko" ? "ko-KR" : "en-US";
+
   return (
     <ol className="space-y-2">
       {popularPosts.map((post, index) => (
@@ -116,7 +119,10 @@ export function PopularPosts({ postsBySlug }: PopularPostsProps) {
                 {post.title}
               </p>
               <p className="text-xs text-subtle">
-                조회 {post.count.toLocaleString("ko-KR")}회
+                {t.home.views.replace(
+                  "{count}",
+                  post.count.toLocaleString(intlLocale),
+                )}
               </p>
             </div>
           </Link>

@@ -1,3 +1,4 @@
+import type { Locale } from "@/lib/i18n/types";
 import { posts, type Post } from "@/lib/velite";
 import { decodeRouteParam } from "@/lib/route-params";
 import { toDateTimestamp } from "@/lib/utils";
@@ -12,7 +13,7 @@ interface PublishedPostIndex {
   adjacentPostsBySlug: Map<string, { prevPost?: Post; nextPost?: Post }>;
 }
 
-let cachedPublishedPostIndex: PublishedPostIndex | null = null;
+const cachedPublishedPostIndices = new Map<Locale, PublishedPostIndex>();
 
 function sortByDateDesc(postItems: Post[]): Post[] {
   return [...postItems].sort((firstPost, secondPost) => {
@@ -22,8 +23,18 @@ function sortByDateDesc(postItems: Post[]): Post[] {
       return secondDate - firstDate;
     }
 
-    return firstPost.slug.localeCompare(secondPost.slug, "ko");
+    return firstPost.slug.localeCompare(secondPost.slug);
   });
+}
+
+function compareByDateAscWithSlug(firstPost: Post, secondPost: Post) {
+  const firstDate = toDateTimestamp(firstPost.date);
+  const secondDate = toDateTimestamp(secondPost.date);
+  if (firstDate !== secondDate) {
+    return firstDate - secondDate;
+  }
+
+  return firstPost.slug.localeCompare(secondPost.slug);
 }
 
 function addPostToTagBucket(
@@ -54,28 +65,6 @@ function addPostToSeriesBucket(postsBySeries: Map<string, Post[]>, post: Post) {
   postsBySeries.set(post.series, [post]);
 }
 
-function buildPostsByTag(sortedPosts: Post[]) {
-  const postsByTag = new Map<string, Post[]>();
-
-  sortedPosts.forEach((post) => {
-    post.tags.forEach((tag) => {
-      addPostToTagBucket(postsByTag, tag, post);
-    });
-  });
-
-  return postsByTag;
-}
-
-function compareByDateAscWithSlug(firstPost: Post, secondPost: Post) {
-  const firstDate = toDateTimestamp(firstPost.date);
-  const secondDate = toDateTimestamp(secondPost.date);
-  if (firstDate !== secondDate) {
-    return firstDate - secondDate;
-  }
-
-  return firstPost.slug.localeCompare(secondPost.slug, "ko");
-}
-
 function sortBySeriesOrder(postsInSeries: Post[]): Post[] {
   return [...postsInSeries].sort((firstPost, secondPost) => {
     const firstOrder = firstPost.seriesOrder ?? Number.POSITIVE_INFINITY;
@@ -88,12 +77,24 @@ function sortBySeriesOrder(postsInSeries: Post[]): Post[] {
   });
 }
 
+function buildPostsByTag(sortedPosts: Post[]) {
+  const postsByTag = new Map<string, Post[]>();
+
+  for (const post of sortedPosts) {
+    for (const tag of post.tags) {
+      addPostToTagBucket(postsByTag, tag, post);
+    }
+  }
+
+  return postsByTag;
+}
+
 function buildPostsBySeries(sortedPosts: Post[]) {
   const postsBySeries = new Map<string, Post[]>();
 
-  sortedPosts.forEach((post) => {
+  for (const post of sortedPosts) {
     addPostToSeriesBucket(postsBySeries, post);
-  });
+  }
 
   postsBySeries.forEach((seriesPosts, seriesName) => {
     postsBySeries.set(seriesName, sortBySeriesOrder(seriesPosts));
@@ -110,7 +111,7 @@ function buildTagCounts(postsByTag: Map<string, Post[]>) {
         return secondTag[1] - firstTag[1];
       }
 
-      return firstTag[0].localeCompare(secondTag[0], "ko");
+      return firstTag[0].localeCompare(secondTag[0]);
     });
 }
 
@@ -130,8 +131,10 @@ function buildAdjacentPostsBySlug(sortedPosts: Post[]) {
   return adjacentPostsBySlug;
 }
 
-function createPublishedPostIndex(): PublishedPostIndex {
-  const publishedPosts = posts.filter((post) => post.published);
+function createPublishedPostIndex(locale: Locale): PublishedPostIndex {
+  const publishedPosts = posts.filter(
+    (post) => post.published && post.locale === locale,
+  );
   const sortedPosts = sortByDateDesc(publishedPosts);
   const postsBySlug = new Map(publishedPosts.map((post) => [post.slug, post]));
   const postsByTag = buildPostsByTag(sortedPosts);
@@ -148,56 +151,74 @@ function createPublishedPostIndex(): PublishedPostIndex {
   };
 }
 
-function getPublishedPostIndex() {
-  if (!cachedPublishedPostIndex) {
-    cachedPublishedPostIndex = createPublishedPostIndex();
+function getPublishedPostIndex(locale: Locale) {
+  const cachedIndex = cachedPublishedPostIndices.get(locale);
+  if (cachedIndex) {
+    return cachedIndex;
   }
 
-  return cachedPublishedPostIndex;
+  const nextIndex = createPublishedPostIndex(locale);
+  cachedPublishedPostIndices.set(locale, nextIndex);
+  return nextIndex;
 }
 
 function normalizeLookupValue(value: string): string {
   return decodeRouteParam(value);
 }
 
-export function getPublishedPosts(): Post[] {
-  return getPublishedPostIndex().publishedPosts;
+function getTranslationLocale(locale: Locale): Locale {
+  return locale === "ko" ? "en" : "ko";
 }
 
-export function getSortedPublishedPosts(): Post[] {
-  return getPublishedPostIndex().sortedPosts;
+export function getPublishedPosts(locale: Locale): Post[] {
+  return getPublishedPostIndex(locale).publishedPosts;
 }
 
-export function getRecentPublishedPosts(limit: number): Post[] {
-  return getSortedPublishedPosts().slice(0, limit);
+export function getSortedPublishedPosts(locale: Locale): Post[] {
+  return getPublishedPostIndex(locale).sortedPosts;
 }
 
-export function getPublishedPostBySlug(slug: string): Post | undefined {
-  return getPublishedPostIndex().postsBySlug.get(normalizeLookupValue(slug));
+export function getRecentPublishedPosts(locale: Locale, limit: number): Post[] {
+  return getSortedPublishedPosts(locale).slice(0, limit);
 }
 
-export function getAdjacentPublishedPosts(slug: string): {
+export function getPublishedPostBySlug(
+  locale: Locale,
+  slug: string,
+): Post | undefined {
+  return getPublishedPostIndex(locale).postsBySlug.get(normalizeLookupValue(slug));
+}
+
+export function getAdjacentPublishedPosts(locale: Locale, slug: string): {
   prevPost?: Post;
   nextPost?: Post;
 } {
   return (
-    getPublishedPostIndex().adjacentPostsBySlug.get(normalizeLookupValue(slug)) ??
+    getPublishedPostIndex(locale).adjacentPostsBySlug.get(normalizeLookupValue(slug)) ??
     {}
   );
 }
 
-export function getPublishedPostsByTag(tag: string): Post[] {
-  return getPublishedPostIndex().postsByTag.get(normalizeLookupValue(tag)) ?? [];
+export function getPublishedPostsByTag(locale: Locale, tag: string): Post[] {
+  return getPublishedPostIndex(locale).postsByTag.get(normalizeLookupValue(tag)) ?? [];
 }
 
-export function getPostsBySeries(seriesName: string): Post[] {
-  return getPublishedPostIndex().postsBySeries.get(seriesName) ?? [];
+export function getPostsBySeries(locale: Locale, seriesName: string): Post[] {
+  return getPublishedPostIndex(locale).postsBySeries.get(normalizeLookupValue(seriesName)) ?? [];
 }
 
-export function getPublishedTags(): string[] {
-  return getPublishedPostIndex().tagCounts.map(([tag]) => tag);
+export function getPublishedTags(locale: Locale): string[] {
+  return getPublishedPostIndex(locale).tagCounts.map(([tag]) => tag);
 }
 
-export function getPublishedTagCounts(): Array<[string, number]> {
-  return getPublishedPostIndex().tagCounts;
+export function getPublishedTagCounts(locale: Locale): Array<[string, number]> {
+  return getPublishedPostIndex(locale).tagCounts;
+}
+
+export function getTranslationForPost(
+  slug: string,
+  currentLocale: Locale,
+): Post | undefined {
+  const translationLocale = getTranslationLocale(currentLocale);
+  return getPublishedPostBySlug(translationLocale, slug);
 }

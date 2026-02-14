@@ -22,7 +22,7 @@ export function toDateTimestamp(date: string) {
   return toDate(date).getTime();
 }
 
-export function formatDate(date: string) {
+export function formatDate(date: string, locale: string = "ko") {
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "long",
@@ -33,5 +33,6 @@ export function formatDate(date: string) {
     options.timeZone = "UTC";
   }
 
-  return new Intl.DateTimeFormat("ko-KR", options).format(toDate(date));
+  const intlLocale = locale === "ko" ? "ko-KR" : "en-US";
+  return new Intl.DateTimeFormat(intlLocale, options).format(toDate(date));
 }

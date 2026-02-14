@@ -1,4 +1,6 @@
 import type { Post } from "@/lib/velite";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -6,17 +8,24 @@ interface SeriesNavProps {
   seriesName: string;
   currentSlug: string;
   posts: Post[];
+  locale: Locale;
 }
 
 function getCurrentSeriesIndex(posts: Post[], currentSlug: string) {
   return posts.findIndex((post) => post.slug === currentSlug);
 }
 
-export function SeriesNav({ seriesName, currentSlug, posts }: SeriesNavProps) {
+export function SeriesNav({
+  seriesName,
+  currentSlug,
+  posts,
+  locale,
+}: SeriesNavProps) {
   if (posts.length === 0) {
     return null;
   }
 
+  const t = getDictionary(locale);
   const currentIndex = getCurrentSeriesIndex(posts, currentSlug);
   const currentOrder = currentIndex >= 0 ? currentIndex + 1 : undefined;
   const heading = currentOrder
@@ -25,7 +34,7 @@ export function SeriesNav({ seriesName, currentSlug, posts }: SeriesNavProps) {
 
   return (
     <section
-      aria-label={`${seriesName} 시리즈 내비게이션`}
+      aria-label={t.series.ariaLabel.replace("{name}", seriesName)}
       className="mt-8 rounded-[var(--theme-radius-lg)] border-[length:var(--theme-border-width)] border-border bg-muted/40 p-5"
     >
       <p className="text-sm font-semibold text-heading">{heading}</p>

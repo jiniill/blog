@@ -10,6 +10,7 @@ import { usePostSubmit } from "@/hooks/admin/use-post-submit";
 interface AdminPostEditorProps {
   mode: "create" | "edit";
   slug?: string;
+  locale?: string;
 }
 
 function EditorSkeleton() {
@@ -58,9 +59,9 @@ function EditorSkeleton() {
   );
 }
 
-export function AdminPostEditor({ mode, slug }: AdminPostEditorProps) {
+export function AdminPostEditor({ mode, slug, locale }: AdminPostEditorProps) {
   const formRef = useRef<HTMLFormElement>(null);
-  const postForm = usePostForm({ mode, slug });
+  const postForm = usePostForm({ mode, slug, locale });
   const postSubmit = usePostSubmit({ mode, getSubmitFormState: postForm.getSubmitFormState });
   const errorMessage = postSubmit.error || postForm.loadError;
 

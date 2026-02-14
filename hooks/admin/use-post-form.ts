@@ -14,6 +14,7 @@ import type { AdminPostDocument, ReferenceLink } from "@/lib/admin/post-types";
 interface UsePostFormOptions {
   mode: "create" | "edit";
   slug?: string;
+  locale?: string;
 }
 
 interface UseEditPostLoaderOptions {
@@ -50,6 +51,7 @@ export interface PostFormState {
   sourceUrl: string;
   sourceTitle: string;
   references: ReferenceLink[];
+  locale: string;
   content: string;
 }
 
@@ -65,6 +67,7 @@ export interface PostFormSetters {
   setSourceUrl: (value: string) => void;
   setSourceTitle: (value: string) => void;
   setReferences: (value: ReferenceLink[]) => void;
+  setLocale: (value: string) => void;
   setContent: (value: string) => void;
 }
 
@@ -94,7 +97,7 @@ function createTodayDateString() {
   return localDate.toISOString().slice(0, 10); // 이유: YYYY-MM-DD 길이가 10자리입니다.
 }
 
-function createInitialFormState(): PostFormState {
+function createInitialFormState(locale = "ko"): PostFormState {
   return {
     title: "",
     slug: "",
@@ -109,6 +112,7 @@ function createInitialFormState(): PostFormState {
     sourceUrl: "",
     sourceTitle: "",
     references: [],
+    locale,
     content: "",
   };
 }
@@ -134,6 +138,16 @@ function mergeUniqueTags(currentTags: string[], incomingTags: string[]) {
   return Array.from(new Set([...currentTags, ...incomingTags]));
 }
 
+function deriveLocaleFromFilePath(filePath: string): string {
+  const segments = filePath.split("/");
+  const postsIndex = segments.indexOf("posts");
+  if (postsIndex >= 0 && postsIndex + 1 < segments.length) {
+    const candidate = segments[postsIndex + 1];
+    if (candidate === "ko" || candidate === "en") return candidate;
+  }
+  return "ko";
+}
+
 function mapDocumentToFormState(post: AdminPostDocument): PostFormState {
   return {
     title: post.frontmatter.title,
@@ -152,6 +166,7 @@ function mapDocumentToFormState(post: AdminPostDocument): PostFormState {
     sourceUrl: post.frontmatter.sourceUrl ?? "",
     sourceTitle: post.frontmatter.sourceTitle ?? "",
     references: post.frontmatter.references ?? [],
+    locale: deriveLocaleFromFilePath(post.filePath),
     content: post.content,
   };
 }
@@ -337,6 +352,7 @@ function usePostFieldSetters({
       setSourceUrl: (value) => setField("sourceUrl", value),
       setSourceTitle: (value) => setField("sourceTitle", value),
       setReferences: (value) => setField("references", value),
+      setLocale: (value) => setField("locale", value),
       setContent: (value) => setField("content", value),
     }),
     [setField, setSlug, setTitle],
@@ -371,8 +387,8 @@ function useSubmitFormState(
   );
 }
 
-export function usePostForm({ mode, slug }: UsePostFormOptions): UsePostFormResult {
-  const [formState, setFormState] = useState<PostFormState>(createInitialFormState);
+export function usePostForm({ mode, slug, locale }: UsePostFormOptions): UsePostFormResult {
+  const [formState, setFormState] = useState<PostFormState>(() => createInitialFormState(locale));
   const [isSlugEdited, setIsSlugEdited] = useState(mode === "edit");
   const isEditMode = mode === "edit";
 

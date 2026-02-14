@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { CheckCircle, Mail, X } from "lucide-react";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 /* -- 타입 -- */
 
 interface SubscribeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  locale: Locale;
 }
 
 type Phase = "closed" | "opening" | "open" | "closing";
@@ -38,13 +41,14 @@ function phaseReducer(phase: Phase, action: PhaseAction): Phase {
 
 /* -- 컴포넌트 -- */
 
-export function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
+export function SubscribeModal({ isOpen, onClose, locale }: SubscribeModalProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<SubmitStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [phase, dispatchPhase] = useReducer(phaseReducer, "closed");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = getDictionary(locale);
 
   /* isOpen 변경에 따라 phase 상태 머신 액션을 디스패치합니다. */
   useEffect(() => {
@@ -106,10 +110,10 @@ export function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
       }
 
       const data = await response.json();
-      setErrorMessage(data.error || "구독 처리 중 오류가 발생했습니다.");
+      setErrorMessage(data.error || t.subscribe.defaultError);
       setStatus("error");
     } catch {
-      setErrorMessage("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
+      setErrorMessage(t.subscribe.networkError);
       setStatus("error");
     }
   }
@@ -138,13 +142,13 @@ export function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-subtle" />
-            <span className="text-sm font-medium text-heading">뉴스레터 구독</span>
+            <span className="text-sm font-medium text-heading">{t.subscribe.title}</span>
           </div>
           <button
             type="button"
             onClick={requestClose}
             className="rounded-[var(--theme-radius-sm)] p-1 text-subtle transition-colors hover:text-foreground"
-            aria-label="닫기"
+            aria-label={t.subscribe.close}
           >
             <X className="h-4 w-4" />
           </button>
@@ -156,16 +160,16 @@ export function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
             <div className="flex flex-col items-center gap-3 py-4 text-center">
               <CheckCircle className="h-10 w-10 text-accent" />
               <p className="text-sm font-medium text-heading">
-                구독이 완료되었습니다!
+                {t.subscribe.success}
               </p>
               <p className="text-xs text-subtle">
-                환영 이메일을 확인해주세요.
+                {t.subscribe.successDetail}
               </p>
             </div>
           ) : (
             <>
               <p className="mb-4 text-sm text-body">
-                새로운 글이 발행되면 이메일로 알려드립니다.
+                {t.subscribe.description}
               </p>
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                 <input
@@ -173,7 +177,7 @@ export function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="이메일 주소를 입력하세요"
+                  placeholder={t.subscribe.emailPlaceholder}
                   required
                   className="w-full rounded-[var(--theme-radius-md)] border border-border bg-surface px-3 py-2.5 text-sm text-foreground placeholder:text-subtle outline-none transition-colors focus:border-accent"
                 />
@@ -185,7 +189,7 @@ export function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
                   disabled={status === "submitting"}
                   className="rounded-[var(--theme-radius-md)] bg-accent px-4 py-2.5 text-sm font-medium text-accent-fg transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
-                  {status === "submitting" ? "처리 중..." : "구독하기"}
+                  {status === "submitting" ? t.subscribe.submitting : t.subscribe.submit}
                 </button>
               </form>
             </>

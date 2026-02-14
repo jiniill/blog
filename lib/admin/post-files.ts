@@ -3,6 +3,7 @@ import "server-only";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import type { Dirent } from "node:fs";
+import { defaultLocale } from "@/lib/i18n/types";
 import { toDateTimestamp } from "@/lib/utils";
 import type {
   AdminPostDocument,
@@ -73,6 +74,10 @@ export function parseAdminPostPayload(
     throw new AdminPostValidationError("수정 시 slug는 변경할 수 없습니다.");
   }
 
+  // locale 필드를 읽습니다 (기본값: defaultLocale).
+  const rawLocale = readOptionalString(data, "locale");
+  const locale = rawLocale === "en" ? "en" : defaultLocale;
+
   // 저장 가능한 payload 형식으로 정규화합니다.
   return {
     title,
@@ -88,6 +93,7 @@ export function parseAdminPostPayload(
     sourceUrl: readOptionalString(data, "sourceUrl"),
     sourceTitle: readOptionalString(data, "sourceTitle"),
     references: readReferences(data),
+    locale,
     content,
   };
 }
@@ -125,7 +131,7 @@ export async function createAdminPost(payload: AdminPostPayload) {
   }
 
   const postYear = payload.date.slice(0, 4);
-  const postDirectory = path.join(CONTENT_POSTS_DIR, postYear);
+  const postDirectory = path.join(CONTENT_POSTS_DIR, payload.locale, postYear);
   const absolutePath = path.join(postDirectory, `${payload.slug}${MDX_EXTENSION}`);
 
   await fs.mkdir(postDirectory, { recursive: true });

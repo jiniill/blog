@@ -3,8 +3,9 @@
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
-// 사용자가 본문을 충분히 읽은 뒤에만 버튼을 보여 시야 방해를 줄입니다.
 const SHOW_BUTTON_SCROLL_Y = 300;
 
 function resolveScrollBehavior() {
@@ -15,10 +16,10 @@ function resolveScrollBehavior() {
   return prefersReducedMotion ? "auto" : "smooth";
 }
 
-export function BackToTop() {
+export function BackToTop({ locale }: { locale: Locale }) {
   const [isVisible, setIsVisible] = useState(false);
+  const t = getDictionary(locale);
 
-  // 스크롤 위치에 따라 버튼 표시 여부를 갱신합니다.
   useEffect(() => {
     let rafId = 0;
 
@@ -40,11 +41,10 @@ export function BackToTop() {
     };
   }, []);
 
-  // 우하단 고정 버튼을 렌더링합니다.
   return (
     <button
       type="button"
-      aria-label="맨 위로 이동"
+      aria-label={t.common.backToTop}
       onClick={() =>
         window.scrollTo({ top: 0, behavior: resolveScrollBehavior() })
       }

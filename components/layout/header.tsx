@@ -7,16 +7,16 @@ import { Menu, X } from "lucide-react";
 import { SearchTrigger } from "@/components/search/search-trigger";
 import { SubscribeModal } from "@/components/subscribe/subscribe-modal";
 import { ThemeSelector } from "@/components/ui/theme-selector";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { Container } from "./container";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/blog", label: "Blog" },
-  { href: "/archive", label: "Archive" },
-  { href: "/about", label: "About" },
-];
+interface HeaderProps {
+  locale: Locale;
+}
 
-export function Header() {
+export function Header({ locale }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [subscribeOpen, setSubscribeOpen] = useState(false);
   const pathname = usePathname();
@@ -26,9 +26,17 @@ export function Header() {
     left: number;
     width: number;
   } | null>(null);
+  const t = getDictionary(locale);
+
+  const navItems = [
+    { href: `/${locale}`, label: t.nav.home },
+    { href: `/${locale}/blog`, label: t.nav.blog },
+    { href: `/${locale}/archive`, label: t.nav.archive },
+    { href: `/${locale}/about`, label: t.nav.about },
+  ];
 
   function isActive(href: string) {
-    if (href === "/") return pathname === "/";
+    if (href === `/${locale}`) return pathname === `/${locale}`;
     return pathname.startsWith(href);
   }
 
@@ -53,7 +61,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b-[length:var(--theme-border-width)] border-header-border bg-header-bg backdrop-blur-[var(--theme-glass-blur)]">
       <Container className="flex h-16 items-center justify-between">
         {/* 로고 */}
-        <Link href="/" className="text-lg font-bold tracking-tight">
+        <Link href={`/${locale}`} className="text-lg font-bold tracking-tight">
           jiniill.dev
         </Link>
 
@@ -93,7 +101,8 @@ export function Header() {
         {/* 데스크톱: 우측 액션 */}
         <div className="flex items-center gap-2">
           <div className="hidden items-center gap-1 sm:flex">
-            <SearchTrigger />
+            <SearchTrigger locale={locale} />
+            <LanguageSwitcher locale={locale} />
             <ThemeSelector />
           </div>
           <button
@@ -101,11 +110,12 @@ export function Header() {
             onClick={() => setSubscribeOpen(true)}
             className="hidden rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-fg shadow-lg transition-all hover:opacity-90 sm:inline-flex"
           >
-            Subscribe
+            {t.subscribe.headerButton}
           </button>
           <SubscribeModal
             isOpen={subscribeOpen}
             onClose={() => setSubscribeOpen(false)}
+            locale={locale}
           />
 
           {/* 모바일: 햄버거 */}
@@ -115,7 +125,7 @@ export function Header() {
             className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--theme-radius-md)] transition-colors hover:bg-surface-hover sm:hidden"
             aria-expanded={mobileOpen}
             aria-controls={mobileMenuId}
-            aria-label={mobileOpen ? "메뉴 닫기" : "메뉴 열기"}
+            aria-label={mobileOpen ? t.meta.menuClose : t.meta.menuOpen}
           >
             {mobileOpen ? (
               <X className="h-4 w-4" />
@@ -145,7 +155,8 @@ export function Header() {
               </Link>
             ))}
             <div className="mt-2 flex items-center gap-2 border-t border-border pt-3">
-              <SearchTrigger />
+              <SearchTrigger locale={locale} />
+              <LanguageSwitcher locale={locale} />
               <ThemeSelector />
               <button
                 type="button"
@@ -155,7 +166,7 @@ export function Header() {
                 }}
                 className="ml-auto rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-fg transition-opacity hover:opacity-90"
               >
-                Subscribe
+                {t.subscribe.headerButton}
               </button>
             </div>
           </Container>
