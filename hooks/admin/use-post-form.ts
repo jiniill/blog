@@ -9,7 +9,7 @@ import {
   type KeyboardEvent,
   type SetStateAction,
 } from "react";
-import type { AdminPostDocument } from "@/lib/admin/post-types";
+import type { AdminPostDocument, ReferenceLink } from "@/lib/admin/post-types";
 
 interface UsePostFormOptions {
   mode: "create" | "edit";
@@ -49,6 +49,7 @@ export interface PostFormState {
   author: string;
   sourceUrl: string;
   sourceTitle: string;
+  references: ReferenceLink[];
   content: string;
 }
 
@@ -63,6 +64,7 @@ export interface PostFormSetters {
   setAuthor: (value: string) => void;
   setSourceUrl: (value: string) => void;
   setSourceTitle: (value: string) => void;
+  setReferences: (value: ReferenceLink[]) => void;
   setContent: (value: string) => void;
 }
 
@@ -106,6 +108,7 @@ function createInitialFormState(): PostFormState {
     author: "",
     sourceUrl: "",
     sourceTitle: "",
+    references: [],
     content: "",
   };
 }
@@ -148,6 +151,7 @@ function mapDocumentToFormState(post: AdminPostDocument): PostFormState {
     author: post.frontmatter.author ?? "",
     sourceUrl: post.frontmatter.sourceUrl ?? "",
     sourceTitle: post.frontmatter.sourceTitle ?? "",
+    references: post.frontmatter.references ?? [],
     content: post.content,
   };
 }
@@ -332,6 +336,7 @@ function usePostFieldSetters({
       setAuthor: (value) => setField("author", value),
       setSourceUrl: (value) => setField("sourceUrl", value),
       setSourceTitle: (value) => setField("sourceTitle", value),
+      setReferences: (value) => setField("references", value),
       setContent: (value) => setField("content", value),
     }),
     [setField, setSlug, setTitle],

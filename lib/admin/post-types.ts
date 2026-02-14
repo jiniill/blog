@@ -1,3 +1,8 @@
+export interface ReferenceLink {
+  title: string;
+  url: string;
+}
+
 export interface AdminPostFrontmatter {
   title: string;
   slug: string;
@@ -11,6 +16,7 @@ export interface AdminPostFrontmatter {
   author?: string;
   sourceUrl?: string;
   sourceTitle?: string;
+  references?: ReferenceLink[];
 }
 
 export interface AdminPostPayload extends AdminPostFrontmatter {

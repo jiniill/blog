@@ -54,6 +54,7 @@ function mapFormStateToPayload(formState: PostFormState): AdminPostPayload {
     author: trimToOptionalText(formState.author),
     sourceUrl: trimToOptionalText(formState.sourceUrl),
     sourceTitle: trimToOptionalText(formState.sourceTitle),
+    references: formState.references.filter((ref) => ref.title.trim() && ref.url.trim()),
     content: formState.content,
   };
 }

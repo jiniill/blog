@@ -202,6 +202,21 @@ function AdditionalFields({
   formState,
   setters,
 }: Pick<FrontmatterFormProps, "formState" | "setters">) {
+  function addReference() {
+    setters.setReferences([...formState.references, { title: "", url: "" }]);
+  }
+
+  function removeReference(index: number) {
+    setters.setReferences(formState.references.filter((_, i) => i !== index));
+  }
+
+  function updateReference(index: number, field: "title" | "url", value: string) {
+    const updated = formState.references.map((ref, i) =>
+      i === index ? { ...ref, [field]: value } : ref,
+    );
+    setters.setReferences(updated);
+  }
+
   return (
     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
       <label className="flex flex-col gap-2 text-sm text-heading">
@@ -231,6 +246,46 @@ function AdditionalFields({
           className={FIELD_CLASS_NAME}
         />
       </label>
+
+      <div className="sm:col-span-2 flex flex-col gap-3 text-sm text-heading">
+        <div className="flex items-center justify-between">
+          <span>참고 링크</span>
+          <button
+            type="button"
+            onClick={addReference}
+            className="rounded-md border border-border px-3 py-1 text-xs text-subtle hover:bg-muted hover:text-heading transition-colors"
+          >
+            + 추가
+          </button>
+        </div>
+        {formState.references.map((ref, index) => (
+          <div key={index} className="flex items-start gap-2">
+            <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+              <input
+                placeholder="제목"
+                value={ref.title}
+                onChange={(event) => updateReference(index, "title", event.target.value)}
+                className={`${FIELD_CLASS_NAME} flex-1`}
+              />
+              <input
+                type="url"
+                placeholder="URL"
+                value={ref.url}
+                onChange={(event) => updateReference(index, "url", event.target.value)}
+                className={`${FIELD_CLASS_NAME} flex-1`}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => removeReference(index)}
+              className="mt-2 shrink-0 text-subtle hover:text-heading"
+              aria-label={`참고 링크 ${index + 1} 삭제`}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import type {
   AdminPostFrontmatter,
   AdminPostListItem,
   AdminPostPayload,
+  ReferenceLink,
 } from "@/lib/admin/post-types";
 
 const CONTENT_POSTS_DIR = path.join(process.cwd(), "content", "posts");
@@ -18,6 +19,7 @@ const FRONTMATTER_END = "\n---\n";
 const DESCRIPTION_MAX_LENGTH = 300;
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const SLUG_PATTERN = /^[\p{Letter}\p{Number}]+(?:-[\p{Letter}\p{Number}]+)*$/u;
+const URL_PATTERN = /^https?:\/\/.+/;
 
 interface PostFileInfo {
   absolutePath: string;
@@ -85,6 +87,7 @@ export function parseAdminPostPayload(
     author: readOptionalString(data, "author"),
     sourceUrl: readOptionalString(data, "sourceUrl"),
     sourceTitle: readOptionalString(data, "sourceTitle"),
+    references: readReferences(data),
     content,
   };
 }
@@ -280,6 +283,9 @@ function parseFrontmatter(frontmatterText: string, filePath: string): AdminPostF
   const frontmatter: Partial<AdminPostFrontmatter> = { published: true, tags: [] };
   const lines = frontmatterText.split("\n");
   let activeArrayKey = "";
+  const pendingReferences: ReferenceLink[] = [];
+  let currentRef: Partial<ReferenceLink> = {};
+  let hasReferencesKey = false;
 
   for (const line of lines) {
     const trimmedLine = line.trim();
@@ -296,7 +302,30 @@ function parseFrontmatter(frontmatterText: string, filePath: string): AdminPostF
       continue;
     }
 
+    // references 배열 블록(`- title:` / `url:`)은 객체 단위로 파싱합니다.
+    if (activeArrayKey === "references") {
+      if (trimmedLine.startsWith("- ")) {
+        // 이전 참고 링크 항목을 확정합니다.
+        pushCompleteReference(pendingReferences, currentRef, filePath);
+        currentRef = {};
+        // `- title: ...` 형태에서 key/value를 추출합니다.
+        applyReferenceField(currentRef, trimmedLine.slice(2).trim());
+        continue;
+      }
+
+      // 들여쓰기된 속성 라인(`url: ...` 등)을 처리합니다.
+      const separatorIndex = trimmedLine.indexOf(":");
+      if (separatorIndex >= 0) {
+        applyReferenceField(currentRef, trimmedLine);
+        continue;
+      }
+    }
+
     // 일반 key/value 라인은 구분자(`:`)를 기준으로 분리합니다.
+    if (activeArrayKey === "references") {
+      pushCompleteReference(pendingReferences, currentRef, filePath);
+      currentRef = {};
+    }
     activeArrayKey = "";
     const separatorIndex = trimmedLine.indexOf(":");
     if (separatorIndex < 0) {
@@ -310,6 +339,18 @@ function parseFrontmatter(frontmatterText: string, filePath: string): AdminPostF
     if (key === "tags" && rawValue === "") {
       activeArrayKey = "tags";
     }
+    if (key === "references" && rawValue === "") {
+      activeArrayKey = "references";
+      hasReferencesKey = true;
+    }
+  }
+
+  // 루프 종료 후 마지막 참고 링크 항목을 확정합니다.
+  if (activeArrayKey === "references") {
+    pushCompleteReference(pendingReferences, currentRef, filePath);
+  }
+  if (hasReferencesKey || pendingReferences.length > 0) {
+    frontmatter.references = pendingReferences;
   }
 
   // 필수 필드를 보강 검증한 뒤 최종 frontmatter를 반환합니다.
@@ -323,6 +364,14 @@ function applyFrontmatterValue(
   filePath: string,
 ) {
   // 스키마가 고정된 특수 필드를 우선 처리합니다.
+  if (key === "references") {
+    // `references: []` 인라인 형태는 명시적 빈 배열로 처리합니다.
+    if (rawValue === "[]") {
+      frontmatter.references = [];
+    }
+    return;
+  }
+
   if (key === "tags") {
     frontmatter.tags = parseTagValue(rawValue);
     return;
@@ -387,6 +436,7 @@ function finalizeFrontmatter(
     author: frontmatter.author,
     sourceUrl: frontmatter.sourceUrl,
     sourceTitle: frontmatter.sourceTitle,
+    references: frontmatter.references,
   };
 }
 
@@ -419,6 +469,38 @@ function parseYamlString(rawValue: string) {
     return rawValue.slice(1, -1);
   }
   return rawValue;
+}
+
+function applyReferenceField(ref: Partial<ReferenceLink>, fieldLine: string) {
+  const separatorIndex = fieldLine.indexOf(":");
+  if (separatorIndex < 0) return;
+
+  const key = fieldLine.slice(0, separatorIndex).trim();
+  const rawValue = parseYamlString(fieldLine.slice(separatorIndex + 1).trim());
+  if (key === "title") ref.title = rawValue;
+  if (key === "url") ref.url = rawValue;
+}
+
+function pushCompleteReference(
+  references: ReferenceLink[],
+  ref: Partial<ReferenceLink>,
+  filePath: string,
+) {
+  const hasTitle = Boolean(ref.title);
+  const hasUrl = Boolean(ref.url);
+
+  if (hasTitle && hasUrl) {
+    references.push({ title: ref.title!, url: ref.url! });
+    return;
+  }
+
+  // title 또는 url 중 하나만 있으면 불완전한 항목으로 간주합니다.
+  if (hasTitle || hasUrl) {
+    const missing = hasTitle ? "url" : "title";
+    throw new AdminPostValidationError(
+      `${filePath}: references 항목에 ${missing}이(가) 누락되었습니다.`,
+    );
+  }
 }
 
 function parseYamlBoolean(rawValue: string, filePath: string, key: string) {
@@ -463,6 +545,15 @@ function buildMdxDocument(payload: AdminPostPayload) {
   if (payload.author) lines.push(`author: ${toYamlString(payload.author)}`);
   if (payload.sourceUrl) lines.push(`sourceUrl: ${toYamlString(payload.sourceUrl)}`);
   if (payload.sourceTitle) lines.push(`sourceTitle: ${toYamlString(payload.sourceTitle)}`);
+
+  // 참고 링크 배열은 YAML 중첩 리스트 형식으로 직렬화합니다.
+  if (payload.references && payload.references.length > 0) {
+    lines.push("references:");
+    payload.references.forEach((ref) => {
+      lines.push(`  - title: ${toYamlString(ref.title)}`);
+      lines.push(`    url: ${toYamlString(ref.url)}`);
+    });
+  }
 
   // 문서 구분자 뒤에 본문을 이어 붙여 최종 mdx를 구성합니다.
   lines.push("---");
@@ -584,6 +675,32 @@ function readTags(data: Record<string, unknown>) {
     .filter(Boolean);
 
   return Array.from(new Set(tags));
+}
+
+function readReferences(data: Record<string, unknown>): ReferenceLink[] | undefined {
+  const value = data.references;
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value)) {
+    throw new AdminPostValidationError("references는 배열이어야 합니다.");
+  }
+
+  return value
+    .filter((item): item is Record<string, unknown> =>
+      typeof item === "object" && item !== null && !Array.isArray(item),
+    )
+    .filter((item) => {
+      const title = typeof item.title === "string" ? item.title.trim() : "";
+      const url = typeof item.url === "string" ? item.url.trim() : "";
+      return title !== "" && url !== "";
+    })
+    .map((item) => {
+      const title = (item.title as string).trim();
+      const url = (item.url as string).trim();
+      if (!URL_PATTERN.test(url)) {
+        throw new AdminPostValidationError(`references의 url은 http:// 또는 https://로 시작해야 합니다: ${url}`);
+      }
+      return { title, url };
+    });
 }
 
 function isMissingDirectoryError(error: unknown) {

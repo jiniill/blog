@@ -33,6 +33,9 @@ export default defineConfig({
           author: s.string().optional(),
           sourceUrl: s.string().url().optional(),
           sourceTitle: s.string().optional(),
+          references: s
+            .array(s.object({ title: s.string(), url: s.string().url() }))
+            .default([]),
           image: s.image().optional(),
           body: s.mdx(),
           metadata: s

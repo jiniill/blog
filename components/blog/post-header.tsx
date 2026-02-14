@@ -32,7 +32,7 @@ export function PostHeader({ post }: { post: Post }) {
           ))}
         </div>
       )}
-      {(post.author || post.sourceTitle) && (
+      {(post.author || post.sourceTitle || post.references.length > 0) && (
         <div className="text-sm text-subtle space-y-0.5">
           {post.author && (
             <p>
@@ -55,6 +55,23 @@ export function PostHeader({ post }: { post: Post }) {
                 post.sourceTitle
               )}
             </p>
+          )}
+          {post.references.length > 0 && (
+            <div className="space-y-0.5">
+              {post.references.map((ref, index) => (
+                <p key={index}>
+                  <span className="font-medium">참고:</span>{" "}
+                  <a
+                    href={ref.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    {ref.title}
+                  </a>
+                </p>
+              ))}
+            </div>
           )}
         </div>
       )}
