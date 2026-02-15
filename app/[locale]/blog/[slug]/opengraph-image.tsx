@@ -11,6 +11,8 @@ import {
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "Blog post cover";
+const FONT_FAMILY = "Noto Sans KR";
+const GOOGLE_FONTS_BASE_URL = "https://fonts.googleapis.com/css2";
 const OG_NOT_FOUND_STYLE = {
   display: "flex",
   width: "100%",
@@ -43,14 +45,59 @@ function createNotFoundImage() {
   );
 }
 
-/** 필요한 글자만 포함하여 폰트 서브셋 로드 */
-async function loadFont(text: string) {
-  const uniqueChars = [...new Set(text)].join("");
-  const url = `https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&text=${encodeURIComponent(uniqueChars)}&display=swap`;
-  const css = await fetch(url).then((r) => r.text());
+type FontWeight = 400 | 700;
+
+const fontCache = new Map<string, Promise<ArrayBuffer>>();
+
+function createUniqueCharacters(text: string): string {
+  return [...new Set(text)].join("");
+}
+
+async function loadFont(weight: FontWeight, text: string): Promise<ArrayBuffer> {
+  // 캐시 키 생성 및 조회
+  const uniqueChars = createUniqueCharacters(text);
+  const cacheKey = `${weight}:${uniqueChars}`;
+  const cached = fontCache.get(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
+  const fontPromise = fetchGoogleFont(weight, uniqueChars);
+  fontCache.set(cacheKey, fontPromise);
+
+  // 실패 시 오염된 캐시 정리
+  try {
+    return await fontPromise;
+  } catch (error) {
+    fontCache.delete(cacheKey);
+    throw error;
+  }
+}
+
+async function fetchGoogleFont(weight: FontWeight, uniqueChars: string): Promise<ArrayBuffer> {
+  // Google Fonts CSS 메타데이터 조회
+  const cssUrl = `${GOOGLE_FONTS_BASE_URL}?family=Noto+Sans+KR:wght@${weight}&text=${encodeURIComponent(uniqueChars)}&display=swap`;
+  const cssResponse = await fetch(cssUrl);
+
+  if (!cssResponse.ok) {
+    throw new Error(`Google Fonts CSS 요청 실패: ${cssResponse.status}`);
+  }
+
+  const css = await cssResponse.text();
   const match = css.match(/src: url\((.+?)\)/);
-  if (!match) throw new Error("Google Fonts에서 폰트를 찾을 수 없습니다");
-  return fetch(match[1]).then((r) => r.arrayBuffer());
+
+  if (!match) {
+    throw new Error("Google Fonts에서 폰트 URL을 찾을 수 없습니다");
+  }
+
+  // 실제 폰트 바이너리 다운로드
+  const fontResponse = await fetch(match[1]);
+  if (!fontResponse.ok) {
+    throw new Error(`Google Fonts 폰트 요청 실패: ${fontResponse.status}`);
+  }
+
+  return fontResponse.arrayBuffer();
 }
 
 export default async function OGImage({
@@ -71,9 +118,12 @@ export default async function OGImage({
     return createNotFoundImage();
   }
 
-  const allText =
-    post.title + post.tags.join("") + siteConfig.title + post.description;
-  const fontData = await loadFont(allText);
+  const dateText = new Date(post.date).toISOString().split("T")[0];
+  const fontTargetText = [post.title, ...post.tags, siteConfig.title, dateText].join(" ");
+  const [regularFontData, boldFontData] = await Promise.all([
+    loadFont(400, fontTargetText),
+    loadFont(700, fontTargetText),
+  ]);
 
   return new ImageResponse(
     (
@@ -86,7 +136,7 @@ export default async function OGImage({
           padding: 60,
           background: "#09090b",
           color: "#fafafa",
-          fontFamily: "Noto Sans KR",
+          fontFamily: FONT_FAMILY,
         }}
       >
         {/* 태그 */}
@@ -139,7 +189,7 @@ export default async function OGImage({
             {siteConfig.title}
           </span>
           <span style={{ fontSize: 18, color: "#71717a" }}>
-            {new Date(post.date).toISOString().split("T")[0]}
+            {dateText}
           </span>
         </div>
       </div>
@@ -148,8 +198,14 @@ export default async function OGImage({
       ...size,
       fonts: [
         {
-          name: "Noto Sans KR",
-          data: fontData,
+          name: FONT_FAMILY,
+          data: regularFontData,
+          weight: 400,
+          style: "normal" as const,
+        },
+        {
+          name: FONT_FAMILY,
+          data: boldFontData,
           weight: 700,
           style: "normal" as const,
         },

@@ -3,13 +3,16 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
+import type { Locale } from "@/lib/i18n/types";
 import { siteConfig } from "@/lib/site-config";
 
 const Giscus = dynamic(() => import("@giscus/react"), {
   ssr: false,
 });
 
-export function Comments() {
+const GISCUS_LANG: Record<Locale, string> = { ko: "ko", en: "en" };
+
+export function Comments({ locale }: { locale: Locale }) {
   // 댓글 렌더링 제어 상태 준비
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -55,11 +58,13 @@ export function Comments() {
           emitMetadata="0"
           inputPosition="top"
           theme={resolvedTheme === "dark" ? "dark" : "light"}
-          lang="ko"
+          lang={GISCUS_LANG[locale]}
           loading="lazy"
         />
       ) : (
-        <p className="text-sm text-subtle">댓글 영역을 불러오는 중입니다.</p>
+        <p className="text-sm text-subtle">
+          {locale === "ko" ? "댓글 영역을 불러오는 중입니다." : "Loading comments..."}
+        </p>
       )}
     </div>
   );

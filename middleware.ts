@@ -68,6 +68,13 @@ function shouldSkipRouting(pathname: string) {
   return /\.[^/]+$/.test(pathname);
 }
 
+/** 서버 컴포넌트에서 locale을 읽을 수 있도록 request 헤더에 추가합니다. */
+function withLocaleHeader(request: NextRequest, locale: Locale) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-locale", locale);
+  return { request: { headers: requestHeaders } };
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -77,14 +84,16 @@ export function middleware(request: NextRequest) {
 
   const localeFromPath = getLocaleFromPath(pathname);
   if (localeFromPath) {
-    return withLocaleCookie(NextResponse.next(), localeFromPath);
+    const response = NextResponse.next(withLocaleHeader(request, localeFromPath));
+    return withLocaleCookie(response, localeFromPath);
   }
 
   const locale = detectLocale(request);
   const rewriteUrl = request.nextUrl.clone();
   rewriteUrl.pathname = pathname === "/" ? `/${locale}` : `/${locale}${pathname}`;
 
-  return withLocaleCookie(NextResponse.rewrite(rewriteUrl), locale);
+  const response = NextResponse.rewrite(rewriteUrl, withLocaleHeader(request, locale));
+  return withLocaleCookie(response, locale);
 }
 
 export const config = {

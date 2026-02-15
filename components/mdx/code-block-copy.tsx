@@ -20,6 +20,20 @@ export function CodeBlockCopy({ children }: { children: React.ReactNode }) {
 
       pre.style.position = "relative";
 
+      /* 코드 블록 상단에 언어 레이블을 표시합니다. */
+      const codeEl = pre.querySelector("code[data-language]");
+      const lang = codeEl?.getAttribute("data-language");
+      if (lang && !pre.parentElement?.querySelector("[data-rehype-pretty-code-title]")) {
+        const badge = document.createElement("span");
+        badge.setAttribute("data-lang-badge", "true");
+        badge.textContent = lang;
+        badge.className =
+          "absolute left-3 top-2 select-none rounded px-1.5 py-0.5 text-[11px] font-medium leading-none opacity-60";
+        badge.style.color = "var(--theme-code-copy-fg)";
+        pre.appendChild(badge);
+        cleanups.push(() => badge.remove());
+      }
+
       const btn = document.createElement("button");
       btn.type = "button";
       btn.setAttribute("data-copy-btn", "true");

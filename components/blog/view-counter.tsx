@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Locale } from "@/lib/i18n/types";
 
-export function ViewCounter({ slug }: { slug: string }) {
+export function ViewCounter({ slug, locale }: { slug: string; locale: Locale }) {
   const [count, setCount] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -33,7 +34,11 @@ export function ViewCounter({ slug }: { slug: string }) {
       {count === null ? (
         <span className="skeleton-glow inline-block h-3.5 w-16 rounded" />
       ) : (
-        <span>{`조회 ${count.toLocaleString("ko-KR")}회`}</span>
+        <span>
+          {locale === "ko"
+            ? `조회 ${count.toLocaleString("ko-KR")}회`
+            : `${count.toLocaleString("en-US")} views`}
+        </span>
       )}
     </>
   );

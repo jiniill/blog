@@ -27,6 +27,7 @@ const ko = {
     reference: "참고:",
     prevPost: "이전 글",
     nextPost: "다음 글",
+    relatedPosts: "관련 글",
   },
   readingTime: {
     short: "짧게 읽기",
@@ -133,6 +134,7 @@ const en: DeepStringRecord<typeof ko> = {
     reference: "Reference:",
     prevPost: "Previous",
     nextPost: "Next",
+    relatedPosts: "Related Posts",
   },
   readingTime: {
     short: "Quick read",

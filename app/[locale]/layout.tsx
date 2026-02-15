@@ -67,17 +67,10 @@ export default async function LocaleLayout({
   }
 
   return (
-    <>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `document.documentElement.lang="${locale}"`,
-        }}
-      />
-      <ThemeProvider>
-        <div className="flex min-h-screen flex-col">
-          <SiteChrome locale={locale}>{children}</SiteChrome>
-        </div>
-      </ThemeProvider>
-    </>
+    <ThemeProvider>
+      <div className="flex min-h-screen flex-col">
+        <SiteChrome locale={locale}>{children}</SiteChrome>
+      </div>
+    </ThemeProvider>
   );
 }

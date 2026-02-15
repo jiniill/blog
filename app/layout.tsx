@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { isValidLocale } from "@/lib/i18n/types";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,13 +20,17 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const rawLocale = headersList.get("x-locale") ?? "en";
+  const lang = isValidLocale(rawLocale) ? rawLocale : "en";
+
   return (
-    <html suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

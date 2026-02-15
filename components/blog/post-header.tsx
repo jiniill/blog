@@ -33,7 +33,7 @@ export function PostHeader({
             <span>{readingTimeLabel}</span>
           </>
         )}
-        <ViewCounter slug={post.slug} />
+        <ViewCounter slug={post.slug} locale={locale} />
       </div>
       {post.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

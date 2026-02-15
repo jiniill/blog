@@ -7,6 +7,7 @@ import {
   getPublishedPostBySlug,
   getPublishedPosts,
   getPostsBySeries,
+  getRelatedPosts,
   getTranslationForPost,
 } from "@/lib/posts";
 import {
@@ -14,7 +15,6 @@ import {
   locales,
   type Locale,
 } from "@/lib/i18n/types";
-import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { Container } from "@/components/layout/container";
 import { PostHeader } from "@/components/blog/post-header";
 import { PostBody } from "@/components/blog/post-body";
@@ -27,6 +27,7 @@ import { TableOfContents } from "@/components/blog/table-of-contents";
 import { ReadingProgress } from "@/components/blog/reading-progress";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { HeadingCopyWrapper } from "@/components/blog/heading-copy-wrapper";
+import { RelatedPosts } from "@/components/blog/related-posts";
 
 interface PostPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -92,7 +93,6 @@ export default async function PostPage({ params }: PostPageProps) {
   const locale = resolveLocale(rawLocale);
   if (!locale) notFound();
 
-  const t = getDictionary(locale);
   const normalizedSlug = decodeRouteParam(slug);
   const post = getPublishedPostBySlug(locale, normalizedSlug);
   if (!post) notFound();
@@ -104,6 +104,9 @@ export default async function PostPage({ params }: PostPageProps) {
   const postsInSeries = post.series
     ? getPostsBySeries(locale, post.series)
     : [];
+
+  const hasTranslation = !!getTranslationForPost(normalizedSlug, locale);
+  const relatedPosts = getRelatedPosts(locale, post.slug, post.tags);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -131,7 +134,7 @@ export default async function PostPage({ params }: PostPageProps) {
             __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        <article className="relative" data-post-article>
+        <article className="relative" data-post-article data-has-translation={hasTranslation}>
           <PostHeader post={post} locale={locale} />
           {post.series && postsInSeries.length > 0 && (
             <SeriesNav
@@ -152,9 +155,10 @@ export default async function PostPage({ params }: PostPageProps) {
             </HeadingCopyWrapper>
           </CodeBlockCopy>
         </article>
+        <RelatedPosts posts={relatedPosts} locale={locale} />
         <SubscribeCta locale={locale} />
         <PostNav prev={prevPost} next={nextPost} locale={locale} />
-        <Comments />
+        <Comments locale={locale} />
         <BackToTop locale={locale} />
       </Container>
     </>

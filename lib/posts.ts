@@ -222,3 +222,27 @@ export function getTranslationForPost(
   const translationLocale = getTranslationLocale(currentLocale);
   return getPublishedPostBySlug(translationLocale, slug);
 }
+
+/** 태그 겹침 수 기준으로 관련 글을 최대 limit개 반환합니다. */
+export function getRelatedPosts(
+  locale: Locale,
+  slug: string,
+  tags: string[],
+  limit = 3,
+): Post[] {
+  if (tags.length === 0) return [];
+
+  const tagSet = new Set(tags);
+  const sorted = getSortedPublishedPosts(locale);
+
+  const scored = sorted
+    .filter((post) => post.slug !== slug)
+    .map((post) => {
+      const overlap = post.tags.filter((t) => tagSet.has(t)).length;
+      return { post, overlap };
+    })
+    .filter(({ overlap }) => overlap > 0);
+
+  scored.sort((a, b) => b.overlap - a.overlap);
+  return scored.slice(0, limit).map(({ post }) => post);
+}
