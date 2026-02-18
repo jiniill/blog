@@ -22,6 +22,7 @@ import { Comments } from "@/components/blog/comments";
 import { PostNav } from "@/components/blog/post-nav";
 import { SeriesNav } from "@/components/blog/series-nav";
 import { CodeBlockCopy } from "@/components/mdx/code-block-copy";
+import { FootnoteTooltip } from "@/components/mdx/footnote-tooltip";
 import { SubscribeCta } from "@/components/subscribe/subscribe-cta";
 import { TableOfContents } from "@/components/blog/table-of-contents";
 import { ReadingProgress } from "@/components/blog/reading-progress";
@@ -147,13 +148,15 @@ export default async function PostPage({ params }: PostPageProps) {
           {post.toc.length > 0 && (
             <TableOfContents items={post.toc} locale={locale} />
           )}
-          <CodeBlockCopy>
-            <HeadingCopyWrapper>
-              <div className="mt-10">
-                <PostBody code={post.body} />
-              </div>
-            </HeadingCopyWrapper>
-          </CodeBlockCopy>
+          <FootnoteTooltip>
+            <CodeBlockCopy>
+              <HeadingCopyWrapper>
+                <div className="mt-10">
+                  <PostBody code={post.body} />
+                </div>
+              </HeadingCopyWrapper>
+            </CodeBlockCopy>
+          </FootnoteTooltip>
         </article>
         <RelatedPosts posts={relatedPosts} locale={locale} />
         <SubscribeCta locale={locale} />
