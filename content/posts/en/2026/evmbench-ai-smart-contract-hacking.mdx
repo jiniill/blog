@@ -1,0 +1,178 @@
+---
+title: "Can AI Hack Smart Contracts? — What EVMbench Reveals"
+slug: "evmbench-ai-smart-contract-hacking"
+description: "Frontier AI agents successfully exploited 72% of smart contract vulnerabilities end-to-end. Here's what OpenAI, Paradigm, and OtterSec's EVMbench found."
+date: 2026-02-19
+published: true
+tags:
+  - "AI"
+  - "Security"
+  - "Smart Contracts"
+  - "Blockchain"
+  - "Benchmark"
+author: "OpenAI, Paradigm, OtterSec"
+sourceUrl: "https://github.com/openai/frontier-evals"
+sourceTitle: "EVMbench — Frontier Evals"
+references:
+  - title: "Introducing EVMbench — OpenAI"
+    url: "https://openai.com/index/introducing-evmbench/"
+  - title: "EVMbench GitHub"
+    url: "https://github.com/openai/frontier-evals"
+  - title: "Code4rena"
+    url: "https://code4rena.com/"
+---
+
+Over **$100 billion** in assets sit locked inside open-source smart contracts[^defi-tvl]. A single bug in that code means someone can take the money — instantly, irreversibly. AI agents have now reached a level where they can find those bugs, fix them, and even **execute the exploit themselves**. **EVMbench**, published jointly by OpenAI, Paradigm, and OtterSec, is the first benchmark to systematically measure this capability.
+
+---
+
+## Why Smart Contract Security Is Different
+
+Normal software bugs get patched. You take the server down, fix the code, redeploy. Smart contracts don't work that way. Once deployed on-chain, they're nearly immutable. The moment a vulnerability surfaces, automated bots drain the funds. The Ethereum ecosystem is called the **"dark forest"**[^dark-forest] for this reason — pending transactions are publicly visible, and any profitable attack path gets frontrun[^frontrun] or copied almost instantly.
+
+Traditional cybersecurity vulnerabilities can be contained or rolled back. Smart contract vulnerabilities translate directly into **irreversible financial loss**. Just as North Korean hacking groups have funded operations through large-scale crypto exploits[^lazarus], a sufficiently capable AI system exploiting this attack surface is a realistic threat.
+
+Paradoxically, these same properties make blockchain ideal for AI evaluation. Execution is **deterministic** (same input, same output every time), success is verifiable through a clear signal — **balance changes** — and real protocols can be faithfully reproduced inside a sandbox.
+
+---
+
+## EVMbench Design: Three Evaluation Modes
+
+EVMbench measures AI agents' smart contract security capabilities along three axes. The evaluation dataset spans **120 high-severity vulnerabilities** drawn from **40 repositories**, mostly sourced from actual audit reports on **Code4rena**[^code4rena], a competitive audit platform.
+
+| Mode | Goal | Input | Output | Scoring |
+|------|------|-------|--------|---------|
+| **Detect** | Find vulnerabilities | Source code + known issue list | Audit report | Model-based judgment (vulnerability recall) |
+| **Patch** | Fix vulnerabilities | Source code + test suite | Modified code | Existing tests pass + exploit tests fail |
+| **Exploit** | Execute real attacks | Source code + RPC endpoint + wallet | Transaction sequence | On-chain balance change verification |
+
+### Detect — "Find the Bug"
+
+The agent reads the code and writes an audit report. Scoring measures **recall** against ground-truth vulnerabilities from actual audits. A **monetary reward score** is also calculated using Code4rena's real payout structure — the maximum possible payout is **$218,434**.
+
+### Patch — "Fix the Bug"
+
+The agent modifies code to block the vulnerability without breaking existing functionality. The grading container runs existing tests on the agent's modified code, plus hidden exploit tests the agent never saw. In practice, **68% of oracle patches require 5 lines or fewer**[^oracle-patch] — but finding those 5 lines is the hard part.
+
+### Exploit — "Attack It Yourself"
+
+The most realistic mode. A vulnerable contract is deployed on a local Ethereum chain (Anvil[^anvil]), and the agent receives a **funded wallet** and an **RPC endpoint**. It must analyze chain state, optionally deploy helper contracts, and send transactions to actually drain funds. Scoring **replays** the agent's transactions in a separate container and verifies on-chain balance changes.
+
+To prevent cheating, a JSON-RPC proxy called **veto**[^veto] blocks simulator-only methods like `anvil_setBalance`. The agent can only use interfaces available on the real Ethereum network.
+
+---
+
+## Frontier Agent Scorecard
+
+Results from **8 frontier agents**, each run 3 independent times at maximum reasoning level.
+
+| Agent | Detect | Patch | Exploit | Notes |
+|-------|--------|-------|---------|-------|
+| **GPT-5.3-Codex** | 39.2% | **41.5%** | **72.2%** | Codex CLI, best Patch & Exploit |
+| **Claude Opus 4.6** | **45.6%** | 25.9% | 61.1% | Claude Code, best Detect |
+| GPT-5.2 | 39.2% | 39.3% | 62.5% | Codex CLI |
+| Claude Opus 4.5 | 36.1% | 21.5% | 50.9% | Claude Code |
+| OC-GPT-5.2 | 30.0% | 35.6% | 51.4% | OpenCode scaffold |
+| Gemini 3 Pro | 20.8% | 10.4% | 36.1% | Gemini CLI |
+| GPT-5 | 23.3% | 20.0% | 31.9% | - |
+| OpenAI o3 | 10.6% | 14.8% | 18.1% | - |
+
+Key observations:
+
+**GPT-5.3-Codex** scored highest on Patch and Exploit. The **72.2%** Exploit rate is striking — roughly 17 out of 24 vulnerabilities successfully attacked end-to-end. When the project started, top models could only exploit less than 20% of these bugs[^progress].
+
+**Claude Opus 4.6** topped the Detect leaderboard at **45.6%**, with the highest average monetary reward of **$37,825**.
+
+The same model (GPT-5.2) showed **significant performance gaps depending on the scaffold**. GPT-5.2 on OpenCode (OC-GPT-5.2) scored lower on Detect and trailed by ~10 percentage points on Exploit compared to GPT-5.2 on Codex CLI.
+
+---
+
+## Hint Experiments: Where's the Real Bottleneck?
+
+When agents fail to exploit, is it because they can't find the vulnerability, or because they can't construct the attack? To disentangle this, the researchers provided **three levels of hints**.
+
+| Hint Level | Content | GPT-5.2 Patch | GPT-5.2 Exploit |
+|------------|---------|---------------|-----------------|
+| **None** | No information | 39.3% | 62.5% |
+| **Low** | File/contract name | 51.9% | 68.1% |
+| **Medium** | Mechanism hint (e.g., "reentrancy in withdraw") | **88.9%** | 76.4% |
+| **High** | Above + grading criteria revealed | - | **95.8%** |
+
+With just a Medium hint, Patch performance jumps from **39.3% to 88.9%**. This shows that agents have sufficient knowledge of Solidity and smart contracts — the primary bottleneck is **the ability to locate vulnerabilities in large codebases**. For Exploit, hints help but don't reach perfection — constructing the correct transaction sequence remains inherently challenging even when the vulnerability is known.
+
+---
+
+## Case Study: GPT-5.2 Drains Funds via Flash Loan
+
+One case analyzed in detail is the **2024-04-noya H-08** vulnerability.
+
+NOYA is a modular yield system managing multiple vaults. Its **Balancer flash loan helper**[^flash-loan] for internal rebalancing lacked vault-level authentication, allowing one vault's operator to drain another vault's funds through the router.
+
+GPT-5.2's attack sequence:
+
+1. Explored the codebase and identified the trust boundary failure in the Balancer flash loan path
+2. Encoded a **two-step payload** in `userData`: withdraw tokens from the victim connector → transfer to attacker wallet
+3. Called `makeFlashLoan` to execute the flash loan
+4. Verified victim connector balance at **0**, attacker wallet balance at **9.99 × 10²³**
+
+The entire fund was drained in a single transaction.
+
+There were failures too. On **2024-08-phi H-06**, GPT-5 identified a reentrancy[^reentrancy] vulnerability but failed to compile the exploit contract. It fell back to `cast` calls, ultimately **losing ETH** without realizing it, and incorrectly reported success.
+
+---
+
+## Common Failure Patterns
+
+| Mode | Failure Type | Description |
+|------|-------------|-------------|
+| Detect | Theme-based reporting | Reports broad categories like "access control" or "reentrancy" but misses the specific scored vulnerability |
+| Patch | Wrong vulnerability fixed | Fixes a different bug than the one being scored |
+| Patch | Superficial fix | Addresses symptoms while leaving the root exploit path intact |
+| Exploit | Incomplete attack | Plausible attempt but doesn't result in an end-to-end exploit |
+| Exploit | Missing state verification | Declares success without checking post-attack balance |
+
+---
+
+## Why This Matters
+
+### Attacker Perspective: Already a Realistic Threat
+
+The top agent succeeded on **72.2%** of Exploit tasks. These vulnerabilities come from real protocol audits, and successful exploits translate directly into **transferable value**. As models and scaffolds improve, the attack surface widens.
+
+### Defender Perspective: Automated Auditing Potential
+
+Claude Opus 4.6 found **$37,825** worth of vulnerabilities in Detect mode. That's only **17%** of the maximum ($218,434), but the value as a tool supplementing human auditors is clear. As hint experiments show, once search capability improves, patching performance jumps dramatically.
+
+---
+
+## Limitations
+
+EVMbench results should not be read as "X% of real blockchain bugs are exploitable." The evaluation set consists of intentionally curated vulnerabilities from known Code4rena audits — it doesn't represent the full distribution of bugs in the wild. Detect mode can't credit valid findings absent from audit reports, and there's no penalty for false positives. Exploit mode supports a single chain only, with no forks or cross-chain interactions. Task counts are limited: **45** for Patch and **24** for Exploit.
+
+---
+
+## Summary
+
+EVMbench is a benchmark measuring AI agents' ability to detect, patch, and exploit smart contract vulnerabilities. Frontier agents can already exploit a substantial portion of vulnerabilities end-to-end, and this capability is shaped by both model performance and scaffold design. Code and data are available on [GitHub](https://github.com/openai/frontier-evals).
+
+[^defi-tvl]: DeFi TVL (Total Value Locked) ranges roughly $105B–$140B as of February 2026 per [DefiLlama](https://defillama.com/). Paradigm's blog also states "$100B+."
+
+[^dark-forest]: From Dan Robinson and Georgios Konstantopoulos's 2020 essay [Ethereum is a Dark Forest](https://www.paradigm.xyz/2020/08/ethereum-is-a-dark-forest). The metaphor borrows from Liu Cixin's sci-fi novel *The Three-Body Problem*, describing Ethereum's mempool as an environment where any profitable transaction is immediately spotted and copied or frontrun by bots.
+
+[^frontrun]: Frontrunning is the act of observing a pending transaction in the mempool and submitting your own transaction with a higher gas fee to get it processed first. It's a primary form of MEV (Maximal Extractable Value) extraction.
+
+[^lazarus]: North Korea's Lazarus Group (RGB 3rd Bureau) stole ~$1.34B in crypto in 2024 and ~$2.02B in 2025. The February 2025 Bybit hack ($1.5B) is the largest single crypto heist ever, [confirmed by the FBI](https://www.ic3.gov/psa/2025/psa250226) as a North Korean operation.
+
+[^code4rena]: [Code4rena](https://code4rena.com/) is a competitive smart contract audit platform with 16,600+ security researchers (wardens). Projects set prize pools; wardens audit the code during a fixed window and earn rewards based on the severity and uniqueness of their findings. Over 1,365 high-severity vulnerabilities have been found across 418+ completed audits.
+
+[^oracle-patch]: Per EVMbench paper (Section 3.2). 68% of ground-truth patches submitted during audits consist of 5 or fewer lines of diff.
+
+[^anvil]: [Anvil](https://book.getfoundry.sh/reference/anvil/) is a local Ethereum node simulator included in the Foundry toolkit. It can fork mainnet state and reproduce real on-chain environments locally.
+
+[^veto]: A custom JSON-RPC proxy built for EVMbench. It intercepts all RPC requests from the agent and blocks simulator-only cheat methods such as `anvil_setBalance` and `anvil_setCode`, ensuring agents can only call standard JSON-RPC methods available on the real Ethereum network.
+
+[^flash-loan]: A flash loan is an uncollateralized loan that must be borrowed and repaid within the same transaction. The borrower can use millions of dollars within a single tx for arbitrage, liquidations, or other operations — if not repaid, the entire transaction reverts atomically.
+
+[^reentrancy]: Reentrancy is a classic smart contract vulnerability where an external contract call re-enters the calling contract's function before state updates complete, enabling repeated fund withdrawals. The 2016 DAO hack ($60M) exploited this pattern.
+
+[^progress]: From the Paradigm blog: "When we started working on this project, top models were only able to exploit less than 20% of the critical, fund-draining Code4rena bugs. Today, GPT-5.3-Codex exploits over 70%."
