@@ -33,7 +33,7 @@ export const siteConfig = {
     "NEXT_PUBLIC_SITE_DESCRIPTION",
     "개발, 기술, 그리고 생각을 기록하는 블로그",
   ),
-  url: getValidatedUrl("NEXT_PUBLIC_SITE_URL", "https://myblog.vercel.app"),
+  url: getValidatedUrl("NEXT_PUBLIC_SITE_URL", "https://jiniill.dev"),
   author: {
     name: getEnvOrFallback("NEXT_PUBLIC_AUTHOR_NAME", "jiniill"),
     github: getValidatedUrl("NEXT_PUBLIC_AUTHOR_GITHUB", "https://github.com"),
