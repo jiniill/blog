@@ -36,7 +36,7 @@ export function Header({ locale }: HeaderProps) {
   ];
 
   function isActive(href: string) {
-    if (href === `/${locale}`) return pathname === `/${locale}`;
+    if (href === `/${locale}`) return pathname === `/${locale}` || pathname === "/";
     return pathname.startsWith(href);
   }
 

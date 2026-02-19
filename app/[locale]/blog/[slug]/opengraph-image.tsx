@@ -125,7 +125,7 @@ export default async function OGImage({
     loadFont(700, fontTargetText),
   ]);
 
-  const titleFontSize = post.title.length > 40 ? 56 : 72;
+  const titleFontSize = post.title.length > 40 ? 64 : 80;
 
   return new ImageResponse(
     (
@@ -153,12 +153,12 @@ export default async function OGImage({
           <div
             style={{
               width: 6,
-              height: 32,
+              height: 40,
               background: "#a78bfa",
               borderRadius: 3,
             }}
           />
-          <span style={{ fontSize: 28, fontWeight: 700, color: "#a1a1aa" }}>
+          <span style={{ fontSize: 36, fontWeight: 700, color: "#a1a1aa" }}>
             {siteConfig.title}
           </span>
         </div>
@@ -180,7 +180,7 @@ export default async function OGImage({
         </div>
 
         {/* 날짜 */}
-        <span style={{ fontSize: 28, color: "#71717a" }}>
+        <span style={{ fontSize: 36, color: "#71717a" }}>
           {dateText}
         </span>
       </div>
