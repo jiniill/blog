@@ -125,6 +125,8 @@ export default async function OGImage({
     loadFont(700, fontTargetText),
   ]);
 
+  const titleFontSize = post.title.length > 40 ? 56 : 72;
+
   return new ImageResponse(
     (
       <div
@@ -133,31 +135,33 @@ export default async function OGImage({
           flexDirection: "column",
           width: "100%",
           height: "100%",
-          padding: 60,
+          padding: "72px 80px",
           background: "#09090b",
           color: "#fafafa",
           fontFamily: FONT_FAMILY,
         }}
       >
-        {/* 태그 */}
-        {post.tags.length > 0 && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 32 }}>
-            {post.tags.slice(0, 4).map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  fontSize: 16,
-                  padding: "6px 16px",
-                  background: "#27272a",
-                  borderRadius: 9999,
-                  color: "#a1a1aa",
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* 사이트명 */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            marginBottom: 48,
+          }}
+        >
+          <div
+            style={{
+              width: 6,
+              height: 32,
+              background: "#a78bfa",
+              borderRadius: 3,
+            }}
+          />
+          <span style={{ fontSize: 28, fontWeight: 700, color: "#a1a1aa" }}>
+            {siteConfig.title}
+          </span>
+        </div>
 
         {/* 제목 */}
         <div
@@ -165,7 +169,7 @@ export default async function OGImage({
             display: "flex",
             flex: 1,
             alignItems: "center",
-            fontSize: post.title.length > 40 ? 44 : 56,
+            fontSize: titleFontSize,
             fontWeight: 700,
             lineHeight: 1.3,
             letterSpacing: "-0.02em",
@@ -175,23 +179,10 @@ export default async function OGImage({
           {post.title}
         </div>
 
-        {/* 하단 */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderTop: "1px solid #27272a",
-            paddingTop: 24,
-          }}
-        >
-          <span style={{ fontSize: 24, fontWeight: 700, color: "#fafafa" }}>
-            {siteConfig.title}
-          </span>
-          <span style={{ fontSize: 18, color: "#71717a" }}>
-            {dateText}
-          </span>
-        </div>
+        {/* 날짜 */}
+        <span style={{ fontSize: 28, color: "#71717a" }}>
+          {dateText}
+        </span>
       </div>
     ),
     {
