@@ -1,12 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import { notFound } from "next/navigation";
 import { PopularPosts } from "@/components/blog/popular-posts";
 import { Container } from "@/components/layout/container";
 import { PostCard } from "@/components/blog/post-card";
 import { getPublishedPosts, getRecentPublishedPosts } from "@/lib/posts";
+import { siteConfig } from "@/lib/site-config";
 import { isValidLocale, type Locale } from "@/lib/i18n/types";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { buildLocaleAlternates, buildLocalePath } from "@/lib/seo";
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
@@ -18,6 +21,22 @@ function resolveLocale(rawLocale: string): Locale {
   }
 
   notFound();
+}
+
+export async function generateMetadata({
+  params,
+}: HomePageProps): Promise<Metadata> {
+  const { locale: rawLocale } = await params;
+  if (!isValidLocale(rawLocale)) return {};
+
+  const t = getDictionary(rawLocale);
+  const canonicalPath = buildLocalePath(rawLocale);
+
+  return {
+    description: t.home.description,
+    alternates: { canonical: canonicalPath, ...buildLocaleAlternates() },
+    openGraph: { url: `${siteConfig.url}${canonicalPath}` },
+  };
 }
 
 export default async function Home({ params }: HomePageProps) {

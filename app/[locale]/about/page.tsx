@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Mail } from "lucide-react";
 import { Container } from "@/components/layout/container";
+import { siteConfig } from "@/lib/site-config";
 import { isValidLocale, type Locale } from "@/lib/i18n/types";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { buildLocaleAlternates, buildLocalePath } from "@/lib/seo";
 
 interface AboutPageProps {
   params: Promise<{ locale: string }>;
@@ -23,10 +25,13 @@ export async function generateMetadata({
   const { locale: rawLocale } = await params;
   if (!isValidLocale(rawLocale)) return {};
   const t = getDictionary(rawLocale);
+  const canonicalPath = buildLocalePath(rawLocale, "/about");
 
   return {
     title: t.about.title,
     description: t.about.description,
+    alternates: { canonical: canonicalPath, ...buildLocaleAlternates("/about") },
+    openGraph: { url: `${siteConfig.url}${canonicalPath}` },
   };
 }
 

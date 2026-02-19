@@ -4,8 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { getSortedPublishedPosts } from "@/lib/posts";
+import { siteConfig } from "@/lib/site-config";
 import { isValidLocale, type Locale } from "@/lib/i18n/types";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { buildLocaleAlternates, buildLocalePath } from "@/lib/seo";
 import { toDate } from "@/lib/utils";
 
 interface ArchiveYearGroup {
@@ -97,10 +99,16 @@ export async function generateMetadata({
   const { locale: rawLocale } = await params;
   if (!isValidLocale(rawLocale)) return {};
   const t = getDictionary(rawLocale);
+  const canonicalPath = buildLocalePath(rawLocale, "/archive");
 
   return {
     title: t.archive.title,
     description: t.archive.description,
+    alternates: {
+      canonical: canonicalPath,
+      ...buildLocaleAlternates("/archive"),
+    },
+    openGraph: { url: `${siteConfig.url}${canonicalPath}` },
   };
 }
 

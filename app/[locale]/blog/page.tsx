@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { PostCard } from "@/components/blog/post-card";
 import { getSortedPublishedPosts } from "@/lib/posts";
+import { siteConfig } from "@/lib/site-config";
 import { isValidLocale, type Locale } from "@/lib/i18n/types";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { buildLocaleAlternates, buildLocalePath } from "@/lib/seo";
 
 interface BlogPageProps {
   params: Promise<{ locale: string }>;
@@ -24,10 +26,13 @@ export async function generateMetadata({
   const { locale: rawLocale } = await params;
   if (!isValidLocale(rawLocale)) return {};
   const t = getDictionary(rawLocale);
+  const canonicalPath = buildLocalePath(rawLocale, "/blog");
 
   return {
     title: t.blog.title,
     description: t.blog.description,
+    alternates: { canonical: canonicalPath, ...buildLocaleAlternates("/blog") },
+    openGraph: { url: `${siteConfig.url}${canonicalPath}` },
   };
 }
 

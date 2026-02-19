@@ -51,14 +51,19 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
+  /* 요청 경로에서 로캘과 slug를 해석합니다. */
   const { locale: rawLocale, slug } = await params;
   const locale = resolveLocale(rawLocale);
   if (!locale) return {};
 
+  /* 게시글 존재 여부를 확인하고 canonical URL을 계산합니다. */
   const normalizedSlug = decodeRouteParam(slug);
   const post = getPublishedPostBySlug(locale, normalizedSlug);
   if (!post) return {};
+  const canonicalPath = post.permalink;
+  const canonicalUrl = `${siteConfig.url}${canonicalPath}`;
 
+  /* 번역 게시글이 있으면 hreflang alternates를 구성합니다. */
   const ogLocale = locale === "ko" ? "ko_KR" : "en_US";
   const translation = getTranslationForPost(normalizedSlug, locale);
 
@@ -70,6 +75,7 @@ export async function generateMetadata({
   }
   alternateLanguages[locale] = `${siteConfig.url}${post.permalink}`;
 
+  /* 게시글 상세 메타데이터를 반환합니다. */
   return {
     title: post.title,
     description: post.description,
@@ -80,10 +86,16 @@ export async function generateMetadata({
       locale: ogLocale,
       publishedTime: post.date,
       modifiedTime: post.updated,
-      url: `${siteConfig.url}${post.permalink}`,
+      url: canonicalUrl,
       tags: post.tags,
     },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.description,
+    },
     alternates: {
+      canonical: canonicalPath,
       languages: alternateLanguages,
     },
   };
