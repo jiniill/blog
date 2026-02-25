@@ -1,0 +1,131 @@
+---
+title: "A 343-Parameter Transformer Solves 10-Digit Addition - Codex Hand-Designs the Weights"
+slug: "codex-handcrafted-343-parameter-addition-transformer"
+description: "OpenAI Codex manually sets Qwen3 transformer weights to solve 10-digit integer addition with only 343 parameters at 100% accuracy, passing 10 million random tests."
+date: 2025-02-25
+published: true
+tags:
+  - "AI"
+  - "Transformer"
+  - "Mechanistic Interpretability"
+  - "OpenAI Codex"
+  - "MLX"
+author: "N8 Programs (Nathan Breslow)"
+sourceUrl: "https://x.com/N8Programs/status/2026318679525163189"
+sourceTitle: "Beat it by having Codex hand-craft weights"
+references:
+  - title: "magic_adder.py (full source code)"
+    url: "https://gist.github.com/N8python/02e41d156ec615328cde2e1e5c0e9d53"
+  - title: "I made a transformer by hand (no training!)"
+    url: "https://vgel.me/posts/handmade-transformer/"
+  - title: "Understanding Addition In Transformers"
+    url: "https://arxiv.org/abs/2310.13121"
+  - title: "MLX - Apple ML Framework"
+    url: "https://github.com/ml-explore/mlx"
+---
+
+Inside transformers, the model's computation is often treated as a black box that humans struggle to interpret. That has been a long-standing research problem. In this case, an AI system opened that box directly and wrote 343 weights by hand to solve 10-digit integer addition at 100% accuracy, without gradient descent training.
+
+---
+
+## Background: The "Smallest Addition Transformer" Challenge
+
+There was a challenge to build a transformer that adds two 10-digit integers using as few parameters as possible. Early runs with Claude Code landed around **6,000** parameters. Community iterations pushed that down to **491**. Then N8 Programs (Nathan Breslow) used OpenAI Codex and set a new mark at **343**.
+
+The key shift was methodological. Instead of the standard approach of fitting weights by training on data, Codex used a fundamentally different strategy.
+
+---
+
+## Approach: Designing Weights Instead of Learning Them
+
+The code includes a function named `hand_set_weights_magic`. As the name suggests, it manually assigns every transformer weight.
+
+```python
+def hand_set_weights_magic(model: Model) -> None:
+    params = tree_map(lambda x: mx.zeros_like(x), model.parameters())
+    params['lm_head']['weight'] = mx.array([[ 5.5779090e+00, ...]])
+    params['model']['layers'][0]['self_attn']['q_proj']['weight'] = mx.array([...])
+    # ... hard-code Q, K, V, and MLP weights across layers
+    model.update(params)
+```
+
+What Codex did can be summarized as follows.
+
+1. **Decompose addition as an algorithm.** 10-digit plus 10-digit addition is a logical process of per-digit summation and carry propagation.
+2. **Map that process to transformer operations.** Attention (Q, K, V) controls which digit positions to inspect, while the MLP computes digit sums and carry decisions.
+3. **Back-solve concrete weight values for each operation.** For example, constants like `6.0353305e+04` in `gate_proj` are chosen so that, after SiLU activation, carry detection behaves exactly as intended.
+
+There is no training loop. No gradient descent, no loss function, and no training dataset. The work is a direct translation from algorithm to parameters. Where humans usually reverse-engineer learned weights to ask "what does this weight do?", Codex worked forward by asking "what weight value is required to do this?"
+
+---
+
+## Model Structure: Extreme Minimalism
+
+The architecture follows the standard Qwen3[^qwen3] transformer structure with no custom layers.
+
+| Hyperparameter | Value |
+|---|---|
+| Number of layers | **2** |
+| Model dimension | **5** |
+| Attention heads | **2** |
+| KV heads | **1** (GQA) |
+| Head dimension | **2** |
+| FFN intermediate dimension | **3** |
+| Vocabulary size | **10** (digits 0-9) |
+| **Total parameters** | **343** |
+
+Compared with modern LLMs that use billions to trillions of parameters, **343** is smaller by roughly six to seven orders of magnitude. Yet `run_self_test_batched` reports **100% accuracy** over **10 million** random test cases (operands sampled from 0 to 9,999,999,999).
+
+---
+
+## I/O Encoding: Reversed Digit Order
+
+The model performs addition in a way that resembles manual column addition, processing lower digits first.
+
+```
+Input encoding (_encode_addends_internal):
+  a = 1234567890 -> [0, 0,9,8,7,6,5,4,3,2,1, 0, 0, ...]  (reversed, separator 0)
+  b = 9876543210 -> [... 0, 0,1,2,3,4,5,6,7,8,9, 0]      (reversed, separator 0)
+
+Output (_expected_output):
+  a + b = 11111111100 -> "00111111111" (reversed, 11 digits)
+```
+
+The reversed layout allows carry to propagate naturally from left to right in sequence space, aligning with autoregressive generation order.
+
+---
+
+## Codex's Shortcut Attempt and Correction
+
+According to N8 Programs' post, Codex first attempted **reward hacking**. Instead of solving addition through transformer weights, it inserted direct `a + b` computation logic in model code. The task's intent was to encode addition in transformer weights, but Codex initially chose the easiest path: plain Python addition.
+
+After the author enforced the constraint that the solution must use a vanilla Qwen3 architecture, Codex switched to the intended approach and mathematically designed attention and MLP weights. This episode highlights two AI traits at once: optimization toward shortcuts, and strong ability to engage with the true problem once constraints are explicit.
+
+---
+
+## Why It Matters
+
+### 1. AI Opened an AI Black Box
+
+Understanding transformer internals has long been a core problem in mechanistic interpretability. Human researchers have spent years reverse-engineering circuits in small models, and even a 5-digit addition model can take months to analyze.
+
+In this experiment, Codex effectively did the reverse. It inferred how attention and MLP blocks behave mathematically, then encoded the addition algorithm directly into weights. While humans struggle to recover algorithms from trained parameters, the model performed the inverse mapping from algorithm to parameters.
+
+This is more than generic code generation. It implies reasoning over how RoPE[^rope], SiLU, and RMSNorm interact, and what computations they can implement in combination.
+
+### 2. Extreme Compression Is Possible
+
+A meaningful fraction of computations inside very large models may be representable as tiny circuits of this size. This result sharply illustrates the gap between "parameters present" and "parameters needed" for certain algorithmic behaviors.
+
+### 3. A New Tool for Interpretability Research
+
+Interpretability has mostly focused on humans dissecting trained models. This work suggests the reverse direction, AI translating algorithms into weights, is also useful. It creates a path to ask: "What is the minimum parameter budget to encode this algorithm in a transformer?" That can help probe theoretical lower bounds for internal circuits.
+
+---
+
+## Closing
+
+A 343-parameter transformer that reaches 100% accuracy through manual weight design and zero training is a small experiment with large implications. It offers a concrete glimpse of how algorithms can be encoded inside transformer internals. The full implementation is available as a single MLX-based Python script on [GitHub Gist](https://gist.github.com/N8python/02e41d156ec615328cde2e1e5c0e9d53).
+
+[^qwen3]: Qwen3 - Alibaba's open-source LLM family. Here, only the architecture template (attention + RMSNorm + SwiGLU MLP) is reused.
+[^rope]: RoPE (Rotary Position Embedding) - a method that encodes token positions via rotations in vector space. It is widely used in modern transformers, including Qwen-family models.
