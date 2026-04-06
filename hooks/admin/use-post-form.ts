@@ -118,13 +118,16 @@ function createInitialFormState(locale = "ko"): PostFormState {
 }
 
 function toKebabCase(value: string) {
+  return toSlugInputValue(value).replace(/^-|-$/g, "");
+}
+
+function toSlugInputValue(value: string) {
   return value
     .toLowerCase()
     .trim()
     .replace(/[^\p{Letter}\p{Number}\s-]/gu, "")
     .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/-+/g, "-");
 }
 
 function normalizeTags(rawValue: string) {
@@ -318,7 +321,7 @@ function useSlugSetter(
   return useCallback(
     (value: string) => {
       setIsSlugEdited(true);
-      setFormState((prevState) => ({ ...prevState, slug: toKebabCase(value) }));
+      setFormState((prevState) => ({ ...prevState, slug: toSlugInputValue(value) }));
     },
     [setFormState, setIsSlugEdited],
   );
